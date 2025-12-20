@@ -27,6 +27,28 @@ const benefits = [
   },
 ];
 
+const heroImages = PlaceHolderImages.filter(img => ['5', '6', '7', '8', '9', '10'].includes(img.id));
+
+function HeroSlideshow() {
+  return (
+    <div className="absolute inset-0 overflow-hidden bg-black">
+      {heroImages.map((image, index) => (
+        <Image
+          key={image.id}
+          src={image.imageUrl}
+          alt={image.description}
+          data-ai-hint={image.imageHint}
+          fill
+          priority={index === 0}
+          className="animate-kenburns absolute inset-0 h-full w-full object-cover"
+          style={{ animationDelay: `${index * 10}s` }}
+        />
+      ))}
+      <div className="absolute inset-0 bg-primary/40"></div>
+    </div>
+  );
+}
+
 export default function Home() {
   return (
     <Dialog>
@@ -34,31 +56,29 @@ export default function Home() {
         <Header />
         <main className="flex-1">
           {/* Hero Section */}
-          <section className="relative bg-card py-20 md:py-32">
-            <div className="container mx-auto px-4 text-center">
-              <div className="absolute inset-0 bg-primary/10 opacity-50"></div>
-              <div className="relative z-10">
-                <p className="font-headline text-lg uppercase tracking-widest text-primary">
-                  6th Session of the Redeemer&apos;s University International Model United Nations
-                </p>
-                <h1 className="mt-4 font-headline text-4xl font-bold tracking-tight text-foreground md:text-6xl">
-                  Better Together for Peace, Development, and Human Rights
-                </h1>
-                <p className="mx-auto mt-6 max-w-3xl text-lg text-muted-foreground">
-                  This theme underscores the importance of global cooperation in addressing the world’s most pressing
-                  challenges. We believe that by uniting diverse perspectives and fostering collaborative solutions, we
-                  can make significant strides towards a more peaceful, equitable, and sustainable future.
-                </p>
-                <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
-                  <DialogTrigger asChild>
-                    <Button size="lg" variant="accent" className="w-full sm:w-auto">
-                      Register Now <ArrowRight className="ml-2" />
-                    </Button>
-                  </DialogTrigger>
-                  <Button size="lg" variant="outline" asChild className="w-full sm:w-auto">
-                    <Link href="/about">Learn More</Link>
+          <section className="relative bg-card py-20 md:py-32 overflow-hidden">
+            <HeroSlideshow />
+            <div className="container relative z-10 mx-auto px-4 text-center">
+              <p className="font-headline text-lg uppercase tracking-widest text-white drop-shadow-md">
+                6th Session of the Redeemer&apos;s University International Model United Nations
+              </p>
+              <h1 className="mt-4 font-headline text-4xl font-bold tracking-tight text-white drop-shadow-lg md:text-6xl">
+                Better Together for Peace, Development, and Human Rights
+              </h1>
+              <p className="mx-auto mt-6 max-w-3xl text-lg text-white/90 drop-shadow-md">
+                This theme underscores the importance of global cooperation in addressing the world’s most pressing
+                challenges. We believe that by uniting diverse perspectives and fostering collaborative solutions, we
+                can make significant strides towards a more peaceful, equitable, and sustainable future.
+              </p>
+              <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
+                <DialogTrigger asChild>
+                  <Button size="lg" variant="accent" className="w-full sm:w-auto">
+                    Register Now <ArrowRight className="ml-2" />
                   </Button>
-                </div>
+                </DialogTrigger>
+                <Button size="lg" variant="outline" asChild className="w-full border-white text-white hover:bg-white hover:text-primary sm:w-auto">
+                  <Link href="/about">Learn More</Link>
+                </Button>
               </div>
             </div>
           </section>
