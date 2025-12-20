@@ -3,37 +3,37 @@
     {
       "id": "1",
       "description": "Delegates assemble for the conference.",
-      "imageUrl": "https://i.imgur.com/aBKIZZh.jpeg",
+      "imageUrl": "https://imgur.com/aBKIZZh.jpeg",
       "imageHint": "delegates conference"
     },
     {
       "id": "2",
       "description": "A committee session is underway.",
-      "imageUrl": "https://i.imgur.com/KyKq9ju.jpeg",
+      "imageUrl": "https://imgur.com/KyKq9ju.jpeg",
       "imageHint": "committee session"
     },
     {
       "id": "3",
       "description": "A group photo of conference staff.",
-      "imageUrl": "https://i.imgur.com/mFRJxIk.jpeg",
+      "imageUrl": "https://imgur.com/mFRJxIk.jpeg",
       "imageHint": "group photo"
     },
     {
       "id": "4",
       "description": "A large group photo of all participants.",
-      "imageUrl": "https://i.imgur.com/hlQ0YKX.jpeg",
+      "imageUrl": "https://imgur.com/hlQ0YKX.jpeg",
       "imageHint": "conference group"
     },
     {
       "id": "5",
       "description": "The President, VP and SG of RUIMUN '25.",
-      "imageUrl": "https://i.imgur.com/9wy1UVY.jpeg",
+      "imageUrl": "https://imgur.com/9wy1UVY.jpeg",
       "imageHint": "student leaders"
     },
     {
       "id": "6",
       "description": "The main stage is set for the opening ceremony.",
-      "imageUrl": "https://i.imgur.com/yTYSo7a.jpeg",
+      "imageUrl": "https://imgur.com/yTYSo7a.jpeg",
       "imageHint": "conference stage"
     },
     {
@@ -45,7 +45,7 @@
     {
       "id": "8",
       "description": "A close up shot of the delegate representing Uganda.",
-      "imageUrl": "https://i.imgur.com/KyJM7P0.jpeg",
+      "imageUrl": "https://imgur.com/KyJM7P0.jpeg",
       "imageHint": "delegate uganda"
     },
     {
@@ -71,6 +71,12 @@
       "description": "The Secretary General of RUIMUN '25.",
       "imageUrl": "https://i.imgur.com/cb1G9xr.jpeg",
       "imageHint": "secretary general"
+    },
+    {
+      "id": "13",
+      "description": "The official RUIMUN Logo.",
+      "imageUrl": "https://i.imgur.com/xZVq78X.png",
+      "imageHint": "ruimun logo"
     }
   ]
 }

@@ -9,6 +9,7 @@ import Link from 'next/link';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
 import { cn } from '@/lib/utils';
+import { Logo } from '@/components/logo';
 
 const benefits = [
   {
@@ -62,6 +63,9 @@ export default function Home() {
         <section className="relative bg-card py-20 md:py-32 overflow-hidden">
           <HeroSlideshow />
           <div className="container relative z-10 mx-auto px-4 text-center">
+             <div className="mb-4 flex justify-center">
+                <Image src="https://i.imgur.com/xZVq78X.png" alt="RUIMUN Logo" width={100} height={100} className="h-20 w-auto md:h-24" />
+             </div>
             <p className="font-headline text-lg uppercase tracking-widest text-white drop-shadow-md">
               6th Session of the Redeemer&apos;s University International Model United Nations
             </p>
