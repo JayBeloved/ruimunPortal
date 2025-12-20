@@ -8,6 +8,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
+import { cn } from '@/lib/utils';
 
 const benefits = [
   {
@@ -40,14 +41,17 @@ function HeroSlideshow() {
           data-ai-hint={image.imageHint}
           fill
           priority={index === 0}
-          className="animate-kenburns absolute inset-0 h-full w-full object-cover"
-          style={{ animationDelay: `${index * 10}s` }}
+          className={cn(
+            'absolute inset-0 h-full w-full object-cover animate-kenburns'
+          )}
+          style={{ animationDelay: `${index * 10}s`, animationDuration: '60s' }}
         />
       ))}
       <div className="absolute inset-0 bg-primary/40"></div>
     </div>
   );
 }
+
 
 export default function Home() {
   return (
@@ -109,7 +113,7 @@ export default function Home() {
           </section>
 
           {/* Gallery Section */}
-          <section id="gallery" className="py-20 bg-card">
+          <section id="gallery" className="bg-card py-20">
             <div className="container mx-auto px-4">
               <div className="text-center">
                 <h2 className="font-headline text-3xl font-bold tracking-tight sm:text-4xl">
