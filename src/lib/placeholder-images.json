@@ -2,57 +2,75 @@
   "placeholderImages": [
     {
       "id": "1",
-      "description": "A delegate speaking at a podium during a MUN conference.",
-      "imageUrl": "https://images.unsplash.com/photo-1759503407457-3683579f080b?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw1fHxjb25mZXJlbmNlJTIwc3BlYWtpbmd8ZW58MHx8fHwxNzY1OTQ2NjQ0fDA&ixlib=rb-4.1.0&q=80&w=1080",
-      "imageHint": "conference speaking"
+      "description": "Delegates assemble for the conference.",
+      "imageUrl": "https://i.imgur.com/aBKIZZh.jpeg",
+      "imageHint": "delegates conference"
     },
     {
       "id": "2",
-      "description": "A group of delegates in formal wear collaborating at a table.",
-      "imageUrl": "https://images.unsplash.com/photo-1668092548351-a90526eefb7e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwyfHxzdHVkZW50cyUyMG1lZXRpbmd8ZW58MHx8fHwxNzY1OTQ2NjQ0fDA&ixlib=rb-4.1.0&q=80&w=1080",
-      "imageHint": "students meeting"
+      "description": "A committee session is underway.",
+      "imageUrl": "https://i.imgur.com/KyKq9ju.jpeg",
+      "imageHint": "committee session"
     },
     {
       "id": "3",
-      "description": "An overview shot of a large committee session in an auditorium.",
-      "imageUrl": "https://images.unsplash.com/photo-1587825140708-dfaf72ae4b04?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw5fHxsZWN0dXJlJTIwaGFsbHxlbnwwfHx8fDE3NjU4OTIzODB8MA&ixlib=rb-4.1.0&q=80&w=1080",
-      "imageHint": "lecture hall"
+      "description": "A group photo of conference staff.",
+      "imageUrl": "https://i.imgur.com/mFRJxIk.jpeg",
+      "imageHint": "group photo"
     },
     {
       "id": "4",
-      "description": "Delegates raising their placards to vote.",
-      "imageUrl": "https://images.unsplash.com/photo-1594291714464-252c9da8447a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwzfHxhdWRpZW5jZSUyMHZvdGluZ3xlbnwwfHx8fDE3NjU5NDY2NDR8MA&ixlib=rb-4.1.0&q=80&w=1080",
-      "imageHint": "audience voting"
+      "description": "A large group photo of all participants.",
+      "imageUrl": "https://i.imgur.com/hlQ0YKX.jpeg",
+      "imageHint": "conference group"
     },
     {
       "id": "5",
-      "description": "Two delegates engaged in a formal discussion.",
-      "imageUrl": "https://images.unsplash.com/photo-1759310610372-c547611af808?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxMHx8Zm9ybWFsJTIwZGlzY3Vzc2lvbnxlbnwwfHx8fDE3NjU5NDY2NDR8MA&ixlib=rb-4.1.0&q=80&w=1080",
-      "imageHint": "formal discussion"
+      "description": "The President, VP and SG of RUIMUN '25.",
+      "imageUrl": "https://i.imgur.com/9wy1UVY.jpeg",
+      "imageHint": "student leaders"
     },
     {
       "id": "6",
-      "description": "A keynote speaker addressing the conference attendees.",
-      "imageUrl": "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw4fHxwdWJsaWMlMjBzcGVha2luZ3xlbnwwfHx8fDE3NjU5NDQ1NDV8MA&ixlib=rb-4.1.0&q=80&w=1080",
-      "imageHint": "public speaking"
+      "description": "The main stage is set for the opening ceremony.",
+      "imageUrl": "https://i.imgur.com/yTYSo7a.jpeg",
+      "imageHint": "conference stage"
     },
     {
       "id": "7",
-      "description": "A student receiving an award on stage.",
-      "imageUrl": "https://images.unsplash.com/photo-1701723598866-d2f29a49a24c?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw4fHxhd2FyZCUyMGNlcmVtb255fGVufDB8fHx8MTc2NTk0NjY0NHww&ixlib=rb-4.1.0&q=80&w=1080",
-      "imageHint": "award ceremony"
+      "description": "The hall expecting delegates.",
+      "imageUrl": "https://i.imgur.com/IRVlRHj.jpeg",
+      "imageHint": "conference hall"
     },
     {
       "id": "8",
-      "description": "Delegates networking during a coffee break.",
-      "imageUrl": "https://images.unsplash.com/photo-1660944359319-4dc58ef921e1?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw5fHxwZW9wbGUlMjBuZXR3b3JraW5nfGVufDB8fHx8MTc2NTk0NjY0NHww&ixlib=rb-4.1.0&q=80&w=1080",
-      "imageHint": "people networking"
+      "description": "A close up shot of the delegate representing Uganda.",
+      "imageUrl": "https://i.imgur.com/KyJM7P0.jpeg",
+      "imageHint": "delegate uganda"
     },
     {
       "id": "9",
-      "description": "The closing ceremony of the conference.",
-      "imageUrl": "https://picsum.photos/seed/ruimun9/600/400",
-      "imageHint": "conference applause"
+      "description": "A close up shot of the delegate representing Seychelles.",
+      "imageUrl": "https://i.imgur.com/BvCDCr3.jpeg",
+      "imageHint": "delegate seychelles"
+    },
+    {
+      "id": "10",
+      "description": "Delegates representing various African countries.",
+      "imageUrl": "https://i.imgur.com/2YoNLxB.jpeg",
+      "imageHint": "african delegates"
+    },
+    {
+      "id": "11",
+      "description": "Members of the UN Legal committee.",
+      "imageUrl": "https://i.imgur.com/lBLsklV.jpeg",
+      "imageHint": "legal committee"
+    },
+    {
+      "id": "12",
+      "description": "The Secretary General of RUIMUN '25.",
+      "imageUrl": "https://i.imgur.com/cb1G9xr.jpeg",
+      "imageHint": "secretary general"
     }
   ]
 }
