@@ -33,18 +33,27 @@ export default function DelegateDashboardPage() {
       if (user) {
         setUser(user);
         const docRef = doc(db, "registrations", user.uid);
-        const docSnap = await getDoc(docRef);
-        if (docSnap.exists()) {
-          const delegateData = docSnap.data() as Delegate;
-          setDelegate(delegateData);
-          if (delegateData.committeeId) {
-            const assignedCommittee = allCommittees.find(c => c.id === delegateData.committeeId);
-            setCommittee(assignedCommittee || null);
+        try {
+          const docSnap = await getDoc(docRef);
+          if (docSnap.exists()) {
+            const delegateData = docSnap.data() as Delegate;
+            setDelegate(delegateData);
+            if (delegateData.committeeId) {
+              const assignedCommittee = allCommittees.find(c => c.id === delegateData.committeeId);
+              setCommittee(assignedCommittee || null);
+            }
+          } else {
+            // If no registration data, go to registration page
+            router.push('/dashboard/delegate/registration');
+            return; // Stop further processing
           }
-        } else {
-          // If no registration data, go to registration page
-          router.push('/dashboard/delegate/registration');
-          return; // Stop further processing
+        } catch (err) {
+            console.error("Firestore error:", err);
+            // It could be an offline error or permission error.
+            // For a better UX, let's guide them to the registration page 
+            // as it's the most likely next step.
+            router.push('/dashboard/delegate/registration');
+            return;
         }
       } else {
         // If no user, redirect to home
@@ -65,6 +74,6 @@ export default function DelegateDashboardPage() {
     return <StatusCards delegate={delegate} committee={committee} />;
   }
   
-  // This should ideally not be reached if logic is correct
+  // This can be reached if a redirect is in progress
   return <DashboardLoading />;
 }
