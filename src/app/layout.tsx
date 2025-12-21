@@ -3,6 +3,8 @@ import { Toaster } from '@/components/ui/toaster';
 import './globals.css';
 import { cn } from '@/lib/utils';
 import { FirebaseClientProvider } from '@/firebase/client-provider';
+import { Dialog } from '@/components/ui/dialog';
+import { RegisterDialogContent } from '@/components/auth/register-dialog';
 
 export const metadata: Metadata = {
   title: "RUIMUN '26 Web Hub",
@@ -27,7 +29,10 @@ export default function RootLayout({
       </head>
       <body className={cn('font-body antialiased')}>
         <FirebaseClientProvider>
-          {children}
+          <Dialog>
+            {children}
+            <RegisterDialogContent />
+          </Dialog>
         </FirebaseClientProvider>
         <Toaster />
       </body>

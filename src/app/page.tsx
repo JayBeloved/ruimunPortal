@@ -1,8 +1,7 @@
 
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Dialog, DialogTrigger } from '@/components/ui/dialog';
-import { RegisterDialogContent } from '@/components/auth/register-dialog';
+import { DialogTrigger } from '@/components/ui/dialog';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { ArrowRight, Briefcase, Globe, GraduationCap } from 'lucide-react';
 import Image from 'next/image';
@@ -31,6 +30,7 @@ const benefits = [
 ];
 
 const heroImages = PlaceHolderImages.filter(img => ['5', '6', '7', '8', '9', '10'].includes(img.id));
+const ruimunLogo = PlaceHolderImages.find(img => img.id === '13');
 
 function HeroSlideshow() {
   return (
@@ -57,7 +57,6 @@ function HeroSlideshow() {
 
 export default function Home() {
   return (
-    <Dialog>
       <div className="flex min-h-screen flex-col bg-background">
         <Header />
         <main className="flex-1">
@@ -66,7 +65,7 @@ export default function Home() {
             <HeroSlideshow />
             <div className="container relative z-10 mx-auto px-4 text-center">
                <div className="mb-4 flex justify-center">
-                  <Image src="https://i.imgur.com/xZVq78X.png" alt="RUIMUN Logo" width={100} height={100} className="h-20 w-auto md:h-24" />
+                  {ruimunLogo && <Image src={ruimunLogo.imageUrl} alt={ruimunLogo.description} width={100} height={100} className="h-20 w-auto md:h-24" />}
                </div>
               <p className="font-headline text-lg uppercase tracking-widest text-white drop-shadow-md">
                 6th Session of the Redeemer&apos;s University International Model United Nations
@@ -168,7 +167,5 @@ export default function Home() {
         </main>
         <Footer />
       </div>
-      <RegisterDialogContent />
-    </Dialog>
   );
 }

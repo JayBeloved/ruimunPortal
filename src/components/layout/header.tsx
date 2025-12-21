@@ -2,14 +2,13 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogTrigger } from "@/components/ui/dialog";
+import { DialogTrigger } from "@/components/ui/dialog";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Menu } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Logo } from "@/components/logo";
 import { cn } from "@/lib/utils";
-import { RegisterDialogContent } from "@/components/auth/register-dialog";
 
 const navLinks = [
   { href: "/", label: "Home" },
@@ -21,7 +20,6 @@ export function Header() {
   const pathname = usePathname();
 
   return (
-    <Dialog>
       <header className="sticky top-0 z-50 w-full border-b bg-card/80 backdrop-blur-sm">
         <div className="container mx-auto flex h-16 items-center justify-between px-4">
           <Logo />
@@ -89,7 +87,5 @@ export function Header() {
           </div>
         </div>
       </header>
-      <RegisterDialogContent />
-    </Dialog>
   );
 }
