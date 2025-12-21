@@ -437,7 +437,7 @@ export function DelegateRegistrationForm() {
 
 
           <Button type="submit" size="lg">Submit Registration</Button>
-          {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
+          <p className="text-red-500 text-sm mt-2">{error}</p>
         </form>
       </CardContent>
     </Card>
