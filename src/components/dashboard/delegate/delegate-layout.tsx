@@ -22,10 +22,10 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
-import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { Dialog, Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Logo } from '@/components/logo';
 import { cn } from '@/lib/utils';
-import { auth } from '@/lib/firebase';
+import { useAuth } from '@/firebase/provider';
 import { useRouter } from 'next/navigation';
 
 
@@ -58,9 +58,12 @@ function DelegateNav() {
 
 function DelegateHeader() {
     const router = useRouter();
+    const auth = useAuth().auth;
 
     const handleLogout = async () => {
-        await auth.signOut();
+        if (auth) {
+            await auth.signOut();
+        }
         router.push('/');
     };
 

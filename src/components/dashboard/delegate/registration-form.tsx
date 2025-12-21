@@ -1,9 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { onAuthStateChanged, User } from 'firebase/auth';
-import { auth, db } from '@/lib/firebase';
 import { doc, getDoc } from 'firebase/firestore';
+import { useAuth, useFirestore } from '@/firebase/provider';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -32,6 +31,8 @@ function FormLoading() {
 }
 
 export function DelegateRegistrationForm() {
+  const { user, loading: authLoading } = useAuth();
+  const db = useFirestore();
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -64,28 +65,27 @@ export function DelegateRegistrationForm() {
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [user, setUser] = useState<User | null>(null);
   const router = useRouter();
   const { toast } = useToast();
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
-      if (currentUser) {
-        setUser(currentUser);
-        setFormData(prev => ({ ...prev, email: currentUser.email || '', name: currentUser.displayName || '' }));
-        const docRef = doc(db, "registrations", currentUser.uid);
-        const docSnap = await getDoc(docRef);
-        if (docSnap.exists()) {
-          setFormData(prev => ({...prev, ...docSnap.data()}));
-        }
-      } else {
+    if (authLoading) return;
+    if (!user || !db) {
         router.push('/');
-      }
-      setLoading(false);
+        return;
+    }
+
+    setFormData(prev => ({ ...prev, email: user.email || '', name: user.displayName || '' }));
+    const docRef = doc(db, "registrations", user.uid);
+    getDoc(docRef).then(docSnap => {
+        if (docSnap.exists()) {
+            setFormData(prev => ({...prev, ...docSnap.data()}));
+        }
+    }).finally(() => {
+        setLoading(false);
     });
 
-     return () => unsubscribe();
-  }, [router]);
+  }, [user, authLoading, db, router]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { id, value } = e.target;
@@ -138,7 +138,7 @@ export function DelegateRegistrationForm() {
     }
   };
 
-  if (loading) {
+  if (loading || authLoading) {
     return (
         <Card>
             <CardHeader>

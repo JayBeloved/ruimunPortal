@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
-import { auth } from '@/lib/firebase';
+import { useAuth } from '@/firebase/provider';
 import { useRouter } from 'next/navigation';
 import { Button } from "@/components/ui/button";
 import {
@@ -16,6 +16,7 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 function DelegateLoginForm() {
+    const auth = useAuth().auth;
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState<string | null>(null);
@@ -24,6 +25,7 @@ function DelegateLoginForm() {
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
         setError(null);
+        if (!auth) return;
         try {
             await signInWithEmailAndPassword(auth, email, password);
             router.push('/dashboard/delegate');
@@ -52,6 +54,7 @@ function DelegateLoginForm() {
 
 
 function DelegateRegisterForm() {
+  const auth = useAuth().auth;
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [firstName, setFirstName] = useState('');
@@ -62,6 +65,7 @@ function DelegateRegisterForm() {
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+    if (!auth) return;
     try {
       await createUserWithEmailAndPassword(auth, email, password);
       // You can also update the user's profile with the first and last name here if you want

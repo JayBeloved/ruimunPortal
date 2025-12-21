@@ -1,10 +1,10 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { onAuthStateChanged, User } from 'firebase/auth';
-import { auth, db } from '@/lib/firebase';
-import { doc, getDoc } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
+import { doc, getDoc } from 'firebase/firestore';
+
+import { useAuth, useFirestore } from '@/firebase/provider';
 import { StatusCards } from '@/components/dashboard/delegate/status-cards';
 import type { Delegate, Committee } from '@/lib/types';
 import { committees as allCommittees } from '@/lib/data';
@@ -20,53 +20,51 @@ function DashboardLoading() {
   );
 }
 
-
 export default function DelegateDashboardPage() {
-  const [user, setUser] = useState<User | null>(null);
+  const { user, loading: authLoading } = useAuth();
+  const db = useFirestore();
   const [delegate, setDelegate] = useState<Delegate | null>(null);
   const [committee, setCommittee] = useState<Committee | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      if (user) {
-        setUser(user);
-        const docRef = doc(db, "registrations", user.uid);
-        try {
-          const docSnap = await getDoc(docRef);
-          if (docSnap.exists()) {
-            const delegateData = docSnap.data() as Delegate;
-            setDelegate(delegateData);
-            if (delegateData.committeeId) {
-              const assignedCommittee = allCommittees.find(c => c.id === delegateData.committeeId);
-              setCommittee(assignedCommittee || null);
-            }
-          } else {
-            // If no registration data, go to registration page
-            router.push('/dashboard/delegate/registration');
-            return; // Stop further processing
-          }
-        } catch (err) {
-            console.error("Firestore error:", err);
-            // It could be an offline error or permission error.
-            // For a better UX, let's guide them to the registration page 
-            // as it's the most likely next step.
-            router.push('/dashboard/delegate/registration');
-            return;
+    if (authLoading) {
+      return; // Wait for authentication to complete
+    }
+
+    if (!user) {
+      router.push('/');
+      return;
+    }
+    
+    if (!db) {
+      return;
+    }
+
+    const docRef = doc(db, "registrations", user.uid);
+    getDoc(docRef).then(docSnap => {
+      if (docSnap.exists()) {
+        const delegateData = docSnap.data() as Delegate;
+        setDelegate(delegateData);
+        if (delegateData.committeeId) {
+          const assignedCommittee = allCommittees.find(c => c.id === delegateData.committeeId);
+          setCommittee(assignedCommittee || null);
         }
       } else {
-        // If no user, redirect to home
-        router.push('/');
-        return; // Stop further processing
+        router.push('/dashboard/delegate/registration');
       }
+      setLoading(false);
+    }).catch(err => {
+      console.error("Firestore error:", err);
+      // Redirect to registration on error as a fallback
+      router.push('/dashboard/delegate/registration');
       setLoading(false);
     });
 
-    return () => unsubscribe();
-  }, [router]);
+  }, [user, authLoading, db, router]);
 
-  if (loading) {
+  if (loading || authLoading) {
     return <DashboardLoading />;
   }
   
@@ -74,6 +72,6 @@ export default function DelegateDashboardPage() {
     return <StatusCards delegate={delegate} committee={committee} />;
   }
   
-  // This can be reached if a redirect is in progress
+  // This can be reached if a redirect is in progress or data is missing
   return <DashboardLoading />;
 }
