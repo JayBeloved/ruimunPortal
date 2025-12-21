@@ -7,15 +7,17 @@ import { X } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 
-const Sheet = SheetPrimitive.Root
+const Dialog = SheetPrimitive.Root
+
+const Sheet = ({ ...props }: React.ComponentProps<typeof Dialog>) => (
+  <Dialog {...props} />
+)
 
 const SheetTrigger = SheetPrimitive.Trigger
 
 const SheetClose = SheetPrimitive.Close
 
 const SheetPortal = SheetPrimitive.Portal
-
-const Dialog = SheetPrimitive.Root;
 
 const SheetOverlay = React.forwardRef<
   React.ElementRef<typeof SheetPrimitive.Overlay>,
