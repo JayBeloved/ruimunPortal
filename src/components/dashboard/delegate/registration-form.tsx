@@ -1,14 +1,35 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { onAuthStateChanged, User } from 'firebase/auth';
 import { auth, db } from '@/lib/firebase';
 import { doc, getDoc } from 'firebase/firestore';
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { Skeleton } from '@/components/ui/skeleton';
+import { useRouter } from 'next/navigation';
+import { useToast } from '@/hooks/use-toast';
+
+function FormLoading() {
+    return (
+        <div className="grid gap-6">
+            <div className="grid md:grid-cols-2 gap-4">
+                <div className="grid gap-2"><Skeleton className="h-6 w-24" /><Skeleton className="h-10" /></div>
+                <div className="grid gap-2"><Skeleton className="h-6 w-24" /><Skeleton className="h-10" /></div>
+            </div>
+            <div className="grid md:grid-cols-2 gap-4">
+                <div className="grid gap-2"><Skeleton className="h-6 w-24" /><Skeleton className="h-10" /></div>
+                <div className="grid gap-2"><Skeleton className="h-6 w-24" /><Skeleton className="h-10" /></div>
+            </div>
+             <div className="grid gap-2"><Skeleton className="h-6 w-24" /><Skeleton className="h-20" /></div>
+            <Skeleton className="h-12 w-full" />
+        </div>
+    )
+}
 
 export function DelegateRegistrationForm() {
   const [formData, setFormData] = useState({
@@ -43,21 +64,28 @@ export function DelegateRegistrationForm() {
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [user, setUser] = useState<User | null>(null);
+  const router = useRouter();
+  const { toast } = useToast();
 
   useEffect(() => {
-    const fetchUserData = async () => {
-      if (auth.currentUser) {
-        const docRef = doc(db, "registrations", auth.currentUser.uid);
+    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+      if (currentUser) {
+        setUser(currentUser);
+        setFormData(prev => ({ ...prev, email: currentUser.email || '', name: currentUser.displayName || '' }));
+        const docRef = doc(db, "registrations", currentUser.uid);
         const docSnap = await getDoc(docRef);
         if (docSnap.exists()) {
-          setFormData(docSnap.data() as any);
+          setFormData(prev => ({...prev, ...docSnap.data()}));
         }
+      } else {
+        router.push('/');
       }
       setLoading(false);
-    };
+    });
 
-    fetchUserData();
-  }, []);
+     return () => unsubscribe();
+  }, [router]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { id, value } = e.target;
@@ -72,13 +100,13 @@ export function DelegateRegistrationForm() {
     e.preventDefault();
     setError(null);
 
-    try {
-        const user = auth.currentUser;
-        if (!user) {
-            throw new Error("No authenticated user found.");
-        }
-        const idToken = await user.getIdToken();
+    if (!user) {
+        setError("You must be logged in to register.");
+        return;
+    }
 
+    try {
+        const idToken = await user.getIdToken();
         const response = await fetch('/api/register_delegate', {
             method: 'POST',
             headers: {
@@ -92,21 +120,43 @@ export function DelegateRegistrationForm() {
             const errorData = await response.json();
             throw new Error(errorData.error || "An unknown error occurred.");
         }
+        
+        toast({
+            title: "Registration Submitted!",
+            description: "Your registration has been submitted successfully.",
+        });
 
-        alert("Registration submitted successfully!");
-    } catch (error) {
+        router.push("/dashboard/delegate");
+
+    } catch (error: any) {
         setError(error.message);
+        toast({
+            variant: "destructive",
+            title: "Submission Failed",
+            description: error.message,
+        });
     }
   };
 
   if (loading) {
-    return <p>Loading form...</p>;
+    return (
+        <Card>
+            <CardHeader>
+                <CardTitle>Delegate Registration Form</CardTitle>
+                 <CardDescription>Please fill out the form below to register for the conference.</CardDescription>
+            </CardHeader>
+            <CardContent>
+                <FormLoading />
+            </CardContent>
+        </Card>
+    );
   }
 
   return (
     <Card>
       <CardHeader>
         <CardTitle>Delegate Registration Form</CardTitle>
+        <CardDescription>Please fill out the form below to register for the conference.</CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="grid gap-6">
@@ -117,7 +167,7 @@ export function DelegateRegistrationForm() {
             </div>
             <div className="grid gap-2">
               <Label htmlFor="email">Email</Label>
-              <Input id="email" type="email" value={formData.email} onChange={handleChange} required />
+              <Input id="email" type="email" value={formData.email} onChange={handleChange} required disabled />
             </div>
           </div>
           
@@ -153,17 +203,17 @@ export function DelegateRegistrationForm() {
             </div>
             <div className="grid gap-2">
                 <Label htmlFor="mun_experience">MUN Experience</Label>
-                <Textarea id="mun_experience" value={formData.mun_experience} onChange={handleChange} />
+                <Textarea id="mun_experience" placeholder="e.g., 3 conferences as delegate, 1 as chair..." value={formData.mun_experience} onChange={handleChange} />
             </div>
           </div>
 
           <div className="grid md:grid-cols-2 gap-4">
             <div className="grid gap-2">
-              <Label htmlFor="affiliation">Affiliation</Label>
+              <Label htmlFor="affiliation">Affiliation (University/Organization)</Label>
               <Input id="affiliation" value={formData.affiliation} onChange={handleChange} />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="position">Position</Label>
+              <Label htmlFor="position">Position (e.g., Student, Analyst)</Label>
               <Input id="position" value={formData.position} onChange={handleChange} />
             </div>
           </div>
@@ -174,7 +224,7 @@ export function DelegateRegistrationForm() {
                   <Input id="department" value={formData.department} onChange={handleChange} />
               </div>
               <div className="grid gap-2">
-                  <Label htmlFor="matric_num">Matriculation Number</Label>
+                  <Label htmlFor="matric_num">Matriculation Number (if applicable)</Label>
                   <Input id="matric_num" value={formData.matric_num} onChange={handleChange} />
               </div>
           </div>
@@ -185,7 +235,7 @@ export function DelegateRegistrationForm() {
               <Input id="city" value={formData.city} onChange={handleChange} />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="state">State</Label>
+              <Label htmlFor="state">State/Province</Label>
               <Input id="state" value={formData.state} onChange={handleChange} />
             </div>
           </div>
@@ -196,7 +246,7 @@ export function DelegateRegistrationForm() {
               <Input id="country" value={formData.country} onChange={handleChange} />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="zipcode">Zip Code</Label>
+              <Label htmlFor="zipcode">Zip/Postal Code</Label>
               <Input id="zipcode" value={formData.zipcode} onChange={handleChange} />
             </div>
           </div>
@@ -229,46 +279,47 @@ export function DelegateRegistrationForm() {
 
             <div className="grid gap-2">
                 <Label htmlFor="medical">Medical Conditions</Label>
-                <Textarea id="medical" value={formData.medical} onChange={handleChange} />
+                <Textarea id="medical" placeholder="Please list any relevant medical conditions or allergies." value={formData.medical} onChange={handleChange} />
             </div>
 
           <div className="grid gap-2">
-            <Label htmlFor="referral">Referral Code</Label>
+            <Label htmlFor="referral">Referral Code (if any)</Label>
             <Input id="referral" value={formData.referral} onChange={handleChange} />
           </div>
 
           <Card>
             <CardHeader>
                 <CardTitle>Committee Preferences</CardTitle>
+                <CardDescription>Select your preferred committees and countries.</CardDescription>
             </CardHeader>
             <CardContent className="grid gap-6">
                 <div className="grid md:grid-cols-2 gap-4">
                     <div className="grid gap-2">
-                        <Label htmlFor="committee1">Committee 1</Label>
+                        <Label htmlFor="committee1">1st Preference Committee</Label>
                         <Input id="committee1" value={formData.committee1} onChange={handleChange} />
                     </div>
                     <div className="grid gap-2">
-                        <Label htmlFor="country1">Country 1</Label>
+                        <Label htmlFor="country1">1st Preference Country</Label>
                         <Input id="country1" value={formData.country1} onChange={handleChange} />
                     </div>
                 </div>
                 <div className="grid md:grid-cols-2 gap-4">
                     <div className="grid gap-2">
-                        <Label htmlFor="committee2">Committee 2</Label>
+                        <Label htmlFor="committee2">2nd Preference Committee</Label>
                         <Input id="committee2" value={formData.committee2} onChange={handleChange} />
                     </div>
                     <div className="grid gap-2">
-                        <Label htmlFor="country2">Country 2</Label>
+                        <Label htmlFor="country2">2nd Preference Country</Label>
                         <Input id="country2" value={formData.country2} onChange={handleChange} />
                     </div>
                 </div>
                 <div className="grid md:grid-cols-2 gap-4">
                     <div className="grid gap-2">
-                        <Label htmlFor="committee3">Committee 3</Label>
+                        <Label htmlFor="committee3">3rd Preference Committee</Label>
                         <Input id="committee3" value={formData.committee3} onChange={handleChange} />
                     </div>
                     <div className="grid gap-2">
-                        <Label htmlFor="country3">Country 3</Label>
+                        <Label htmlFor="country3">3rd Preference Country</Label>
                         <Input id="country3" value={formData.country3} onChange={handleChange} />
                     </div>
                 </div>

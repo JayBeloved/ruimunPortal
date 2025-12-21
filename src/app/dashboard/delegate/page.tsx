@@ -5,16 +5,26 @@ import { onAuthStateChanged, User } from 'firebase/auth';
 import { auth, db } from '@/lib/firebase';
 import { doc, getDoc } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
-import { DelegateRegistrationForm } from '@/components/dashboard/delegate/registration-form';
 import { StatusCards } from '@/components/dashboard/delegate/status-cards';
 import type { Delegate, Committee } from '@/lib/types';
 import { committees as allCommittees } from '@/lib/data';
+import { Skeleton } from '@/components/ui/skeleton';
+
+function DashboardLoading() {
+  return (
+    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+      <Skeleton className="h-28" />
+      <Skeleton className="h-28" />
+      <Skeleton className="h-28" />
+    </div>
+  );
+}
+
 
 export default function DelegateDashboardPage() {
   const [user, setUser] = useState<User | null>(null);
   const [delegate, setDelegate] = useState<Delegate | null>(null);
   const [committee, setCommittee] = useState<Committee | null>(null);
-  const [hasRegistered, setHasRegistered] = useState(false);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
@@ -27,17 +37,19 @@ export default function DelegateDashboardPage() {
         if (docSnap.exists()) {
           const delegateData = docSnap.data() as Delegate;
           setDelegate(delegateData);
-          setHasRegistered(true);
           if (delegateData.committeeId) {
             const assignedCommittee = allCommittees.find(c => c.id === delegateData.committeeId);
             setCommittee(assignedCommittee || null);
           }
         } else {
-          setHasRegistered(false);
+          // If no registration data, go to registration page
           router.push('/dashboard/delegate/registration');
+          return; // Stop further processing
         }
       } else {
+        // If no user, redirect to home
         router.push('/');
+        return; // Stop further processing
       }
       setLoading(false);
     });
@@ -46,17 +58,13 @@ export default function DelegateDashboardPage() {
   }, [router]);
 
   if (loading) {
-    return <p>Loading dashboard...</p>;
-  }
-
-  if (!user) {
-    return null; // The redirect is handled in useEffect
+    return <DashboardLoading />;
   }
   
-  if (hasRegistered) {
+  if (delegate) {
     return <StatusCards delegate={delegate} committee={committee} />;
   }
-
-  // Redirect is handled in useEffect, this is a fallback.
-  return <p>Redirecting to registration...</p>;
+  
+  // This should ideally not be reached if logic is correct
+  return <DashboardLoading />;
 }
