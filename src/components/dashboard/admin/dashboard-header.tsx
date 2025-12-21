@@ -16,9 +16,9 @@ import { Menu, User, LogOut } from "lucide-react";
 import Link from "next/link";
 import { Logo } from "@/components/logo";
 import { usePathname } from "next/navigation";
-import { DashboardNav } from "./dashboard-nav";
+import { AdminNav } from "./dashboard-nav";
 
-export function DashboardHeader() {
+export function AdminHeader() {
   const pathname = usePathname();
   const isAdmin = pathname.includes("/admin");
 
@@ -36,7 +36,7 @@ export function DashboardHeader() {
                 <div className="p-4 border-b">
                     <Logo />
                 </div>
-              <DashboardNav isMobile={true} />
+              <AdminNav isMobile={true} />
             </SheetContent>
           </Sheet>
       </div>

@@ -86,7 +86,7 @@ export default function Home() {
                 </DialogTrigger>
                 <RegisterDialogContent />
               </Dialog>
-              <Button size="lg" variant="outline" asChild className="w-full border-white text-white hover:bg-white hover:text-primary sm:w-auto">
+              <Button size="lg" variant="outline" asChild className="w-full border-white text-balck hover:bg-white hover:text-primary sm:w-auto">
                 <Link href="/about">Learn More</Link>
               </Button>
             </div>

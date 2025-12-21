@@ -1,80 +1,68 @@
-"use client";
+'use client';
 
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
-import { useRouter } from "next/navigation";
+import { useState } from 'react';
+import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { auth } from '@/lib/firebase';
+import { useRouter } from 'next/navigation';
 import { Button } from "@/components/ui/button";
 import {
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-  DialogClose,
+    DialogContent,
+    DialogDescription,
+    DialogHeader,
+    DialogTitle,
 } from "@/components/ui/dialog";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { useToast } from "@/hooks/use-toast";
-
-const formSchema = z.object({
-  email: z.string().email({ message: "Please enter a valid email address." }),
-});
+import { Label } from "@/components/ui/label";
 
 export function RegisterDialogContent() {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
+  const [error, setError] = useState<string | null>(null);
   const router = useRouter();
-  const { toast } = useToast();
 
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      email: "",
-    },
-  });
-
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    // In a real application, you would query Firestore here to check if the user is a returning delegate.
-    // For this prototype, we'll just show a toast and redirect to the full registration form.
-    toast({
-      title: "Welcome!",
-      description: "Please complete your registration.",
-    });
-
-    // We can pass the email to the registration page via query params
-    router.push(`/register?email=${encodeURIComponent(values.email)}`);
-  }
+  const handleSignUp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    try {
+      await createUserWithEmailAndPassword(auth, email, password);
+      router.push('/dashboard/delegate');
+    } catch (error: any) {
+      setError(error.message);
+    }
+  };
 
   return (
     <DialogContent className="sm:max-w-[425px]">
-      <DialogHeader>
-        <DialogTitle className="font-headline">Begin Your Journey</DialogTitle>
-        <DialogDescription>
-          Enter your email to start the registration process. Returning delegates will be able to confirm their details.
-        </DialogDescription>
-      </DialogHeader>
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 py-4">
-          <FormField
-            control={form.control}
-            name="email"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Email Address</FormLabel>
-                <FormControl>
-                  <Input placeholder="name@example.com" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <DialogFooter>
-            <DialogClose asChild>
-                <Button type="button" variant="ghost">Cancel</Button>
-            </DialogClose>
-            <Button type="submit" variant="accent">Continue</Button>
-          </DialogFooter>
+        <DialogHeader>
+            <DialogTitle>Register as a Delegate</DialogTitle>
+            <DialogDescription>
+                Create an account to begin your registration.
+            </DialogDescription>
+        </DialogHeader>
+        <form onSubmit={handleSignUp}>
+            <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="firstName" className="text-right">First Name</Label>
+                <Input id="firstName" value={firstName} onChange={(e) => setFirstName(e.target.value)} className="col-span-3" required />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="lastName" className="text-right">Last Name</Label>
+                <Input id="lastName" value={lastName} onChange={(e) => setLastName(e.target.value)} className="col-span-3" required />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="email" className="text-right">Email</Label>
+                <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="col-span-3" required />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="password" className="text-right">Password</Label>
+                <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} className="col-span-3" required />
+            </div>
+            </div>
+            <Button type="submit">Register</Button>
+            {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
         </form>
-      </Form>
     </DialogContent>
   );
 }

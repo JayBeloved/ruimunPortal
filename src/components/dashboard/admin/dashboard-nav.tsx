@@ -19,7 +19,7 @@ interface DashboardNavProps {
   isMobile?: boolean;
 }
 
-export function DashboardNav({ isMobile = false }: DashboardNavProps) {
+export function AdminNav({ isMobile = false }: DashboardNavProps) {
   const pathname = usePathname();
   const isAdmin = pathname.includes("/admin");
 
