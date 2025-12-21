@@ -34,6 +34,7 @@ export default function DelegateDashboardPage() {
           }
         } else {
           setHasRegistered(false);
+          router.push('/dashboard/delegate/registration');
         }
       } else {
         router.push('/');
@@ -56,7 +57,6 @@ export default function DelegateDashboardPage() {
     return <StatusCards delegate={delegate} committee={committee} />;
   }
 
-  return (
-      <DelegateRegistrationForm />
-  );
+  // Redirect is handled in useEffect, this is a fallback.
+  return <p>Redirecting to registration...</p>;
 }

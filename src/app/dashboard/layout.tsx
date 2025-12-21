@@ -1,8 +1,7 @@
 'use client';
 
 import { usePathname } from 'next/navigation';
-import { DelegateHeader } from '@/components/dashboard/delegate/delegate-header';
-import { DelegateNav } from '@/components/dashboard/delegate/delegate-nav';
+import { DelegateLayout } from '@/components/dashboard/delegate/delegate-layout';
 import { AdminHeader } from '@/components/dashboard/admin/dashboard-header';
 import { AdminNav } from '@/components/dashboard/admin/dashboard-nav';
 
@@ -26,14 +25,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
     // Default to delegate layout
     return (
-        <div className="flex min-h-screen w-full flex-col bg-muted/40">
-            <DelegateNav />
-            <div className="flex flex-col sm:gap-4 sm:py-4 sm:pl-14">
-                <DelegateHeader />
-                <main className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8">
-                    {children}
-                </main>
-            </div>
-        </div>
+        <DelegateLayout>
+            {children}
+        </DelegateLayout>
     );
 }
