@@ -82,7 +82,7 @@ export default function Home() {
               <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
                 <DialogTrigger asChild>
                   <Button size="lg" variant="accent" className="w-full sm:w-auto">
-                    Register Now <ArrowRight className="ml-2" />
+                    Delegates <ArrowRight className="ml-2" />
                   </Button>
                 </DialogTrigger>
                 <Button size="lg" variant="outline" asChild className="w-full border-white text-balck hover:bg-white hover:text-primary sm:w-auto">
@@ -158,7 +158,7 @@ export default function Home() {
                   </div>
                   <DialogTrigger asChild>
                       <Button size="lg" variant="secondary" className="flex-shrink-0 text-primary hover:bg-white/90">
-                      Register Today
+                      Delegates
                       </Button>
                   </DialogTrigger>
                 </div>
