@@ -1,12 +1,18 @@
 import * as admin from 'firebase-admin';
-import serviceAccount from '@/lib/serviceAccountKey.json';
 
 if (!admin.apps.length) {
   try {
-    admin.initializeApp({
-      credential: admin.credential.cert(serviceAccount as any),
-      // databaseURL: `https://studio-7787230270-1a82b.firebaseio.com`
-    });
+    if (process.env.NODE_ENV === 'development') {
+      admin.initializeApp({
+        credential: admin.credential.applicationDefault(),
+      });
+    } else {
+        // Use service account credentials in production
+        const serviceAccount = require('@/lib/serviceAccountKey.json');
+        admin.initializeApp({
+            credential: admin.credential.cert(serviceAccount)
+        });
+    }
   } catch (error) {
     console.error('Firebase admin initialization error', error);
   }
