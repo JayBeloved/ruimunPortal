@@ -67,21 +67,37 @@ export function DelegateRegistrationForm() {
   const { toast } = useToast();
 
   useEffect(() => {
-    if (authLoading) return;
-    if (!user || !db) {
+    if (authLoading) {
+      setLoading(true);
+      return;
+    }
+    if (!user) {
         router.push('/');
         return;
     }
-
+    
+    // Set initial form data from user object and attempt to fetch existing registration
     setFormData(prev => ({ ...prev, email: user.email || '', name: user.displayName || '' }));
-    const docRef = doc(db, "registrations", user.uid);
-    getDoc(docRef).then(docSnap => {
-        if (docSnap.exists()) {
-            setFormData(prev => ({...prev, ...docSnap.data()}));
-        }
-    }).finally(() => {
+    
+    if (db) {
+        const docRef = doc(db, "registrations", user.uid);
+        getDoc(docRef).then(docSnap => {
+            if (docSnap.exists()) {
+                const existingData = docSnap.data();
+                // Ensure we don't overwrite the initial user data if the doc is empty
+                if (existingData) {
+                    setFormData(prev => ({...prev, ...existingData}));
+                }
+            }
+        }).catch(err => {
+            // It's okay if this fails (e.g., offline, permissions), the form will just be empty.
+            console.warn("Could not fetch existing registration, starting with a blank form.", err);
+        }).finally(() => {
+            setLoading(false);
+        });
+    } else {
         setLoading(false);
-    });
+    }
 
   }, [user, authLoading, db, router]);
 
@@ -427,5 +443,3 @@ export function DelegateRegistrationForm() {
     </Card>
   );
 }
-
-    
