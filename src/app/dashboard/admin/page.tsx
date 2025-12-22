@@ -1,11 +1,40 @@
+'use client';
 
+import { useEffect, useState } from 'react';
+import { collection, onSnapshot } from 'firebase/firestore';
+import { useFirestore } from '@/firebase/provider';
 import { SummarySection } from "@/components/dashboard/admin/summary-section";
-import { delegates, committees } from "@/lib/data";
+import { Delegate } from '@/lib/types';
+import { delegates, committees } from "@/lib/data"; // Keeping for placeholder/fallback
 
 export default function AdminDashboardPage() {
-  // In a real app, this data would be fetched from Firestore
-  const allDelegates = delegates;
-  const allCommittees = committees;
+  const db = useFirestore();
+  const [delegates, setDelegates] = useState<Delegate[]>([]);
+  const [loading, setLoading] = useState(true);
+  const allCommittees = committees; // Keep using static data for now
+
+  useEffect(() => {
+    if (!db) return;
+    setLoading(true);
+    
+    const delegatesCollection = collection(db, 'registrations');
+    
+    const unsubscribe = onSnapshot(delegatesCollection, (snapshot) => {
+      const fetchedDelegates = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+      })) as Delegate[];
+      setDelegates(fetchedDelegates);
+      setLoading(false);
+    }, (error) => {
+      console.error("Failed to fetch delegates:", error);
+      setLoading(false);
+    });
+
+    // Cleanup listener on component unmount
+    return () => unsubscribe();
+  }, [db]);
+
 
   return (
     <div className="space-y-8">
@@ -17,7 +46,7 @@ export default function AdminDashboardPage() {
             </p>
         </div>
       </div>
-      <SummarySection delegates={allDelegates} committees={allCommittees} />
+      <SummarySection delegates={delegates} committees={allCommittees} loading={loading} />
     </div>
   );
 }

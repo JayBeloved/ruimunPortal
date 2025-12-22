@@ -1,116 +1,87 @@
+'use client';
 
-"use client";
-
-import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip } from "recharts";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Users, UserCheck, UserX, Landmark } from "lucide-react";
-import type { Delegate, Committee } from "@/lib/types";
-import { ChartContainer, ChartTooltipContent } from "@/components/ui/chart";
+import { useMemo } from 'react';
+import { Delegate, Committee } from '@/lib/types';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface SummarySectionProps {
   delegates: Delegate[];
   committees: Committee[];
+  loading: boolean;
 }
 
-export function SummarySection({ delegates, committees }: SummarySectionProps) {
-  const totalDelegates = delegates.length;
-  const verifiedPayments = delegates.filter(d => d.paymentStatus === 'Verified').length;
-  const assignedDelegates = delegates.filter(d => d.committeeId !== null).length;
-  const unassignedDelegates = totalDelegates - assignedDelegates;
+function StatCard({ title, value, loading }: { title: string, value: string | number, loading: boolean }) {
+    return (
+        <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">{title}</CardTitle>
+            </CardHeader>
+            <CardContent>
+                {loading ? <Skeleton className="h-8 w-1/2" /> : <div className="text-2xl font-bold">{value}</div>}
+            </CardContent>
+        </Card>
+    );
+}
 
-  const committeeAssignments = committees.map(committee => ({
-    name: committee.name.split(' ')[0], // Shorten name for chart
-    delegates: delegates.filter(d => d.committeeId === committee.id).length,
-  }));
-  
-  const chartConfig = {
-    delegates: {
-      label: "Delegates",
-      color: "hsl(var(--primary))",
-    },
-  };
+export function SummarySection({ delegates, committees, loading }: SummarySectionProps) {
 
-  return (
-    <>
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Registrations</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{totalDelegates}</div>
-            <p className="text-xs text-muted-foreground">Total delegates registered</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Verified Payments</CardTitle>
-            <UserCheck className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{verifiedPayments}</div>
-            <p className="text-xs text-muted-foreground">
-              {((verifiedPayments / totalDelegates) * 100).toFixed(0)}% of total
-            </p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Assigned Delegates</CardTitle>
-            <Landmark className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{assignedDelegates}</div>
-            <p className="text-xs text-muted-foreground">
-                {((assignedDelegates / totalDelegates) * 100).toFixed(0)}% of total
-            </p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Unassigned Delegates</CardTitle>
-            <UserX className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{unassignedDelegates}</div>
-             <p className="text-xs text-muted-foreground">
-                Awaiting committee assignment
-            </p>
-          </CardContent>
-        </Card>
-      </div>
+    const delegateStats = useMemo(() => {
+        const redeemer = delegates.filter(d => d.delegate_type === 'redeemer').length;
+        const nigerian = delegates.filter(d => d.delegate_type === 'nigerian').length;
+        const international = delegates.filter(d => d.delegate_type === 'international').length;
+        const total = delegates.length;
+        
+        const assigned = delegates.filter(d => d.assigned_committee && d.assigned_country).length;
+        const verifiedPayments = delegates.filter(d => d.payment_status === 'verified').length;
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Committee Assignments</CardTitle>
-          <CardDescription>Number of delegates assigned to each committee.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <ChartContainer config={chartConfig} className="min-h-[200px] w-full">
-            <ResponsiveContainer width="100%" height={350}>
-              <BarChart data={committeeAssignments}>
-                <XAxis
-                  dataKey="name"
-                  stroke="#888888"
-                  fontSize={12}
-                  tickLine={false}
-                  axisLine={false}
-                />
-                <YAxis
-                  stroke="#888888"
-                  fontSize={12}
-                  tickLine={false}
-                  axisLine={false}
-                  tickFormatter={(value) => `${value}`}
-                />
-                <Tooltip content={<ChartTooltipContent />} />
-                <Bar dataKey="delegates" fill="var(--color-delegates)" radius={[4, 4, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </ChartContainer>
-        </CardContent>
-      </Card>
-    </>
-  );
+        return { redeemer, nigerian, international, total, assigned, verifiedPayments };
+    }, [delegates]);
+
+    const committeeDistribution = useMemo(() => {
+        const distribution = new Map<string, number>();
+        delegates.forEach(delegate => {
+            if (delegate.committee1) {
+                distribution.set(delegate.committee1, (distribution.get(delegate.committee1) || 0) + 1);
+            }
+        });
+        return Array.from(distribution, ([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value);
+    }, [delegates]);
+
+    const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d'];
+
+    return (
+        <section className="space-y-6">
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                <StatCard title="Total Delegates" value={delegateStats.total} loading={loading} />
+                <StatCard title="Redeemer's Delegates" value={delegateStats.redeemer} loading={loading} />
+                <StatCard title="Nigerian Delegates" value={delegateStats.nigerian} loading={loading} />
+                <StatCard title="International Delegates" value={delegateStats.international} loading={loading} />
+            </div>
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-2">
+                 <StatCard title="Verified Payments" value={delegateStats.verifiedPayments} loading={loading} />
+                 <StatCard title="Assigned Delegates" value={delegateStats.assigned} loading={loading} />
+            </div>
+
+            <Card className="col-span-1 lg:col-span-2">
+                <CardHeader>
+                    <CardTitle>Committee Preferences (1st Choice)</CardTitle>
+                </CardHeader>
+                <CardContent className="pl-2">
+                    {loading ? <Skeleton className="h-[350px] w-full" /> : 
+                        <ResponsiveContainer width="100%" height={350}>
+                            <BarChart data={committeeDistribution}>
+                                <CartesianGrid strokeDasharray="3 3" />
+                                <XAxis dataKey="name" angle={-45} textAnchor="end" height={100} interval={0} />
+                                <YAxis allowDecimals={false} />
+                                <Tooltip />
+                                <Bar dataKey="value" fill="#8884d8" name="1st Choice Selections" />
+                            </BarChart>
+                        </ResponsiveContainer>
+                    }
+                </CardContent>
+            </Card>
+        </section>
+    );
 }

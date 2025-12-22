@@ -3,6 +3,7 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { getAuth, onAuthStateChanged, Auth, User } from 'firebase/auth';
 import { getFirestore, Firestore } from 'firebase/firestore';
+import Cookies from 'js-cookie';
 import { app } from './config';
 
 interface FirebaseContextType {
@@ -34,6 +35,19 @@ export const FirebaseProvider = ({ children }: { children: ReactNode }) => {
     const unsubscribe = onAuthStateChanged(authInstance, (user) => {
       setUser(user);
       setLoading(false);
+      if (user) {
+        // Set a cookie with user information
+        const userData = {
+            uid: user.uid,
+            email: user.email,
+            displayName: user.displayName,
+            photoURL: user.photoURL,
+        };
+        Cookies.set('user', JSON.stringify(userData), { expires: 7 }); // Cookie expires in 7 days
+      } else {
+        // Remove the cookie on logout
+        Cookies.remove('user');
+      }
     });
 
     return () => unsubscribe();
