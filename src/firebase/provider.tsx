@@ -27,7 +27,7 @@ export const FirebaseProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     const authInstance = getAuth(app);
-    const dbInstance = getFirestore(app);
+    const dbInstance = getFirestore(app, 'legacydb');
     setAuth(authInstance);
     setDb(dbInstance);
 
