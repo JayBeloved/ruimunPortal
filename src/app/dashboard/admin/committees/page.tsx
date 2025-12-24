@@ -1,58 +1,60 @@
+'use client';
 
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
-import { generateCommitteeDescriptions } from "@/ai/flows/generate-committee-descriptions";
-import { Button } from "@/components/ui/button";
-import { Sparkles } from "lucide-react";
-import { committees } from "@/lib/data";
+import { useState, useEffect } from 'react';
+import { useFirestore } from '@/firebase/provider';
+import { collection, getDocs } from 'firebase/firestore';
+import { AdminPageLoader } from '@/components/dashboard/admin/loader';
+import { CommitteeAssignments } from '@/components/dashboard/admin/committees/assignments';
+import { Delegate, Committee } from '@/lib/types';
+import { toast, Toaster } from 'sonner';
 
-async function CommitteeCard({ committee }: { committee: (typeof committees)[0] }) {
-  async function generateDescription(formData: FormData) {
-    "use server";
-    const topic = formData.get("topic") as string;
-    const committeeName = formData.get("committeeName") as string;
-    // In a real app, you would get the current description from a database
-    const currentDescription = ""; 
-    const result = await generateCommitteeDescriptions({ topic, committeeName, description: currentDescription });
-    // Here you would update the description in your database
-    console.log(result.description);
-    // For the prototype, we'll just log it
-  }
+export default function CommitteesPage() {
+    const db = useFirestore();
+    const [delegates, setDelegates] = useState<Delegate[]>([]);
+    const [committees, setCommittees] = useState<Committee[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
 
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle>{committee.name}</CardTitle>
-        <CardDescription>{committee.topic}</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <p className="text-sm text-muted-foreground mb-4">{committee.description}</p>
-        <form action={generateDescription}>
-          <input type="hidden" name="topic" value={committee.topic} />
-          <input type="hidden" name="committeeName" value={committee.name} />
-          <Button variant="outline" size="sm">
-            <Sparkles className="mr-2 h-4 w-4" />
-            Generate New Description with AI
-          </Button>
-        </form>
-      </CardContent>
-    </Card>
-  );
-}
+    useEffect(() => {
+        const fetchData = async () => {
+            if (!db) return;
+            setLoading(true);
+            try {
+                // Fetch Delegates
+                const delegatesSnapshot = await getDocs(collection(db, 'delegates'));
+                const delegatesData = delegatesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Delegate[];
+                setDelegates(delegatesData);
 
-export default function AdminCommitteesPage() {
-  return (
-    <div className="space-y-8">
-      <div>
-        <h2 className="text-3xl font-bold tracking-tight font-headline">Committee Management</h2>
-        <p className="text-muted-foreground">
-          View and manage conference committees.
-        </p>
-      </div>
-      <div className="grid gap-6 md:grid-cols-2">
-        {committees.map(committee => (
-          <CommitteeCard key={committee.id} committee={committee} />
-        ))}
-      </div>
-    </div>
-  );
+                // Fetch Committees
+                const committeesSnapshot = await getDocs(collection(db, 'committees'));
+                const committeesData = committeesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Committee[];
+                setCommittees(committeesData);
+
+            } catch (err) {
+                console.error("Error fetching data:", err);
+                setError('Failed to load committee data. Please try refreshing the page.');
+                toast.error('Failed to load committee data.');
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchData();
+    }, [db]);
+
+    if (loading) {
+        return <AdminPageLoader />;
+    }
+
+    if (error) {
+        return <p className="text-red-500 p-4">{error}</p>;
+    }
+
+    return (
+        <div className="p-4 md:p-6">
+            <Toaster richColors />
+            <h1 className="text-2xl font-bold mb-4">Committee Assignments</h1>
+            <CommitteeAssignments committees={committees} delegates={delegates} />
+        </div>
+    );
 }

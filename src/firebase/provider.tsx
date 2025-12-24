@@ -3,14 +3,15 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { getAuth, onIdTokenChanged, Auth, User } from 'firebase/auth';
 import { getFirestore, Firestore } from 'firebase/firestore';
-import Cookies from 'js-cookie';
+import { usePathname, useRouter } from 'next/navigation';
+import { Toaster, toast } from 'sonner';
 import { app } from './config';
 
 interface FirebaseContextType {
   auth: Auth | null;
   db: Firestore | null;
   user: User | null;
-  isAdmin: boolean; // Add isAdmin state
+  isAdmin: boolean;
   loading: boolean;
 }
 
@@ -29,57 +30,55 @@ export const FirebaseProvider = ({ children }: { children: ReactNode }) => {
   const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
 
+  const pathname = usePathname();
+  const router = useRouter();
+
   useEffect(() => {
     const authInstance = getAuth(app);
     const dbInstance = getFirestore(app, 'legacydb');
     setAuth(authInstance);
     setDb(dbInstance);
 
-    // Use onIdTokenChanged to listen for token refreshes
     const unsubscribe = onIdTokenChanged(authInstance, async (firebaseUser) => {
       setLoading(true);
       if (firebaseUser) {
-        // Get the ID token and check for the custom claim
         const tokenResult = await firebaseUser.getIdTokenResult();
         const userIsAdmin = tokenResult.claims.admin === true;
 
-        if (userIsAdmin) {
-          setUser(firebaseUser);
-          setIsAdmin(true);
-          const userData = {
-            uid: firebaseUser.uid,
-            email: firebaseUser.email,
-            displayName: firebaseUser.displayName,
-            photoURL: firebaseUser.photoURL,
-          };
-          Cookies.set('user', JSON.stringify(userData), { expires: 7 });
-        } else {
-          // If the user is logged in but not an admin, sign them out.
+        setUser(firebaseUser);
+        setIsAdmin(userIsAdmin);
+
+        // If the user is on an admin route but is NOT an admin, sign them out.
+        if (pathname.startsWith('/dashboard/admin') && !userIsAdmin) {
+          toast.error('Access Denied. You do not have admin privileges.', { duration: 5000 });
           await authInstance.signOut();
-          // State will be cleared in the 'else' block below
         }
+
       } else {
         // User is logged out
         setUser(null);
         setIsAdmin(false);
-        Cookies.remove('user');
+
+        // If the user was on a protected admin route, redirect them to the login page.
+        if (pathname.startsWith('/dashboard/admin')) {
+          router.push('/login');
+        }
+        // We don't force a redirect for delegate pages, allowing them to see a login dialog.
       }
       setLoading(false);
     });
 
     return () => unsubscribe();
-  }, []);
+  }, [pathname, router]);
 
   return (
     <FirebaseContext.Provider value={{ auth, db, user, isAdmin, loading }}>
+      <Toaster richColors position="bottom-right" />
       {children}
     </FirebaseContext.Provider>
   );
 };
 
 export const useFirebase = () => useContext(FirebaseContext);
-export const useAuth = () => {
-  const { auth, user, isAdmin, loading } = useFirebase();
-  return { auth, user, isAdmin, loading };
-}
+export const useAuth = () => useFirebase();
 export const useFirestore = () => useFirebase().db;
