@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { signInWithEmailAndPassword, AuthError } from 'firebase/auth';
 import { useAuth } from '@/firebase/provider';
 import { useRouter } from 'next/navigation';
@@ -31,6 +31,7 @@ export default function LoginPage() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [formLoading, setFormLoading] = useState(false);
+    const toastId = useRef<string | number | undefined>(undefined);
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -40,32 +41,40 @@ export default function LoginPage() {
         }
 
         setFormLoading(true);
-        const toastId = toast.loading('Attempting to log in...');
+        toastId.current = toast.loading('Attempting to log in...');
 
         try {
             await signInWithEmailAndPassword(auth, email, password);
-            // The FirebaseProvider will handle the redirect on successful login + admin check
-            // We just need to wait for the user state to update.
+            // The useEffect will now handle the success toast and redirect.
         } catch (error: any) {
             const errorMessage = getFirebaseAuthError(error as AuthError);
-            toast.error(errorMessage, { id: toastId });
+            toast.error(errorMessage, { id: toastId.current });
             setFormLoading(false); // Only stop loading on error
         }
     };
 
     useEffect(() => {
-        // Redirect the user if they are successfully logged in and are an admin.
-        if (!authLoading && user && isAdmin) {
-            toast.success('Admin login successful! Redirecting...');
+        if (authLoading) return;
+
+        // On successful login, user and isAdmin become true
+        if (user && isAdmin) {
+            if (toastId.current) {
+                toast.success('Admin login successful! Redirecting...', { id: toastId.current });
+            }
             router.push('/dashboard/admin');
         }
 
-        // Handle the case where a non-admin user is logged in.
-        // The provider will log them out, so we can show a message.
-        if (!authLoading && user && !isAdmin) {
-            toast.error("Access Denied. You do not have permission.");
+        // Handle non-admin login attempts
+        if (user && !isAdmin) {
+             if (toastId.current) {
+                toast.error("Access Denied. You do not have permission.", { id: toastId.current });
+             } else {
+                toast.error("Access Denied. You do not have permission.");
+             }
             // The provider handles the sign-out.
+            setFormLoading(false);
         }
+
     }, [user, isAdmin, authLoading, router]);
 
     return (

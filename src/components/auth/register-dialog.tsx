@@ -123,8 +123,8 @@ function DelegateRegisterForm() {
             closeButtonRef.current.click();
         }
 
-        router.push('/dashboard/delegate/register');
-    } catch (error: any) {
+        router.push('/dashboard/delegate/registration');
+    } catch (error: any)        {
         const errorMessage = getFirebaseAuthError(error as AuthError);
         toast.error(errorMessage, { id: toastId });
     } finally {
