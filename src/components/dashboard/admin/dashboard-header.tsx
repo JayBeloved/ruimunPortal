@@ -11,7 +11,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Menu, User, LogOut } from "lucide-react";
 import Link from "next/link";
 import { Logo } from "@/components/logo";
@@ -33,9 +33,10 @@ export function AdminHeader() {
               </Button>
             </SheetTrigger>
             <SheetContent side="left" className="flex flex-col p-0">
-                <div className="p-4 border-b">
+                <SheetHeader className="p-4 border-b">
+                    <SheetTitle className="sr-only">Admin Menu</SheetTitle>
                     <Logo />
-                </div>
+                </SheetHeader>
               <AdminNav isMobile={true} />
             </SheetContent>
           </Sheet>
