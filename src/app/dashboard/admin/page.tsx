@@ -1,40 +1,63 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { collection, onSnapshot } from 'firebase/firestore';
-import { useFirestore } from '@/firebase/provider';
+import { collection, getDocs } from 'firebase/firestore';
+import { useAuth, useFirestore } from '@/firebase/provider';
 import { SummarySection } from "@/components/dashboard/admin/summary-section";
 import { Delegate } from '@/lib/types';
-import { delegates, committees } from "@/lib/data"; // Keeping for placeholder/fallback
+import { committees } from "@/lib/data"; 
+import { AdminPageLoader } from '@/components/dashboard/admin/loader';
+import { toast } from 'sonner';
+import { useRouter } from 'next/navigation';
+
 
 export default function AdminDashboardPage() {
-  const db = useFirestore();
+  const { db, isAdmin, loading: authLoading } = useAuth();
+  const router = useRouter();
   const [delegates, setDelegates] = useState<Delegate[]>([]);
   const [loading, setLoading] = useState(true);
-  const allCommittees = committees; // Keep using static data for now
+  const allCommittees = committees; 
 
   useEffect(() => {
-    if (!db) return;
-    setLoading(true);
-    
-    const delegatesCollection = collection(db, 'registrations');
-    
-    const unsubscribe = onSnapshot(delegatesCollection, (snapshot) => {
-      const fetchedDelegates = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data(),
-      })) as Delegate[];
-      setDelegates(fetchedDelegates);
-      setLoading(false);
-    }, (error) => {
-      console.error("Failed to fetch delegates:", error);
-      setLoading(false);
-    });
+    if (authLoading) return;
+    if (!isAdmin) {
+      router.push('/login');
+      return;
+    }
+    if (!db) {
+        toast.error("Firestore is not available.");
+        setLoading(false);
+        return;
+    };
 
-    // Cleanup listener on component unmount
-    return () => unsubscribe();
-  }, [db]);
+    const fetchDelegates = async () => {
+        setLoading(true);
+        try {
+            const delegatesCollection = collection(db, 'registrations');
+            const snapshot = await getDocs(delegatesCollection);
 
+            const fetchedDelegates = snapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data(),
+            })) as Delegate[];
+
+            setDelegates(fetchedDelegates);
+        } catch (error: any) {
+            console.error("Failed to fetch delegates:", error);
+            toast.error("Failed to fetch delegate data.", { description: error.message });
+        } finally {
+            setLoading(false);
+        }
+    }
+
+    fetchDelegates();
+
+  }, [db, isAdmin, authLoading, router]);
+
+
+  if (loading || authLoading) {
+      return <AdminPageLoader />;
+  }
 
   return (
     <div className="space-y-8">

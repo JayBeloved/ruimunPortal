@@ -1,0 +1,23 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Rule for the 'registrations' collection
+    match /registrations/{registrationId} {
+
+      function isAdmin() {
+        return request.auth != null && request.auth.token.admin == true;
+      }
+      
+      // Admins can read and write any single document.
+      // Delegates can read and write their own document.
+      allow read, write: if isAdmin() || (request.auth != null && request.auth.uid == registrationId);
+    }
+    
+    // New rule for LISTING the entire collection
+    match /registrations {
+        // Admins can list all documents in the collection.
+        allow list: if request.auth != null && request.auth.token.admin == true;
+    }
+  }
+}
