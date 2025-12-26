@@ -13,6 +13,9 @@ import { cn } from "@/lib/utils";
 const navLinks = [
   { href: "/", label: "Home" },
   { href: "/about", label: "About" },
+  { href: "/gallery", label: "Gallery" },
+  { href: "/resources", label: "Resources" },
+  { href: "/legacy", label: "RUIMUN Legacy" },
   { href: "/dashboard/delegate", label: "Dashboard" },
 ];
 

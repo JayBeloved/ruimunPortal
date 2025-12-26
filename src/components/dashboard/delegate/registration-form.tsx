@@ -161,7 +161,7 @@ export function DelegateRegistrationForm() {
     try {
         const idToken = await user.getIdToken();
         // TODO: The user mentioned updating this to /api/register in Part 3.3. I will do this in the next steps.
-        const response = await fetch('/api/register_delegate', {
+        const response = await fetch('/api/register', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -180,7 +180,7 @@ export function DelegateRegistrationForm() {
             description: "Your registration has been submitted successfully.",
         });
 
-        router.push("/dashboard"); // Redirect to the main dashboard page after success
+        router.push("/dashboard/delegate"); // Redirect to the main dashboard page after success
 
     } catch (error: any) {
         setError(error.message);
@@ -249,9 +249,9 @@ export function DelegateRegistrationForm() {
                         <Select onValueChange={(value) => handleSelectChange('delegate_type', value)} value={formData.delegate_type} required>
                             <SelectTrigger><SelectValue placeholder="Select Delegate Type" /></SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="redeemer">Redeemer's University (₦70,000)</SelectItem>
-                                <SelectItem value="nigerian">Nigerian Delegate (₦70,000)</SelectItem>
-                                <SelectItem value="international">International Delegate ($100)</SelectItem>
+                                <SelectItem value="redeemer">Redeemer's University (₦80,000)</SelectItem>
+                                <SelectItem value="nigerian">Nigerian Delegate (₦100,000)</SelectItem>
+                                <SelectItem value="international">International Delegate ($150)</SelectItem>
                             </SelectContent>
                         </Select>
                     </div>

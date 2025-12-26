@@ -28,6 +28,7 @@ export function AdminNav({ isMobile = false }: DashboardNavProps) {
     { href: "/dashboard/admin/delegates", label: "Delegates", icon: Users },
     { href: "/dashboard/admin/committees", label: "Committees", icon: Landmark },
     { href: "/dashboard/admin/payments", label: "Payments", icon: DollarSign },
+    { href: "/dashboard/admin/cms", label: "CMS", icon: FileText },
   ];
 
   const delegateNavLinks = [

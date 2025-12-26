@@ -51,8 +51,9 @@ export function AdminHeader() {
         <DropdownMenuTrigger asChild>
           <Button variant="secondary" size="icon" className="rounded-full">
             <Avatar>
-              <AvatarImage src={`https://i.pravatar.cc/150?u=${isAdmin ? 'admin' : 'delegate'}`} />
-              <AvatarFallback>{isAdmin ? 'A' : 'D'}</AvatarFallback>
+              <AvatarFallback>
+                <User className="h-5 w-5" />
+              </AvatarFallback>
             </Avatar>
             <span className="sr-only">Toggle user menu</span>
           </Button>

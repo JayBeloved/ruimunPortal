@@ -64,9 +64,9 @@ export default function Home() {
           <section className="relative bg-card py-20 md:py-32 overflow-hidden">
             <HeroSlideshow />
             <div className="container relative z-10 mx-auto px-4 text-center">
-               <div className="mb-4 flex justify-center">
+               {/* <div className="mb-4 flex justify-center">
                   {ruimunLogo && <Image src={ruimunLogo.imageUrl} alt={ruimunLogo.description} width={100} height={100} className="h-20 w-auto md:h-24" />}
-               </div>
+               </div> */}
               <p className="font-headline text-lg uppercase tracking-widest text-white drop-shadow-md">
                 6th Session of the Redeemer&apos;s University International Model United Nations
               </p>

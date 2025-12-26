@@ -1,13 +1,15 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useFirestore } from '@/firebase/provider';
-import { collection, getDocs, doc, writeBatch, FieldValue } from 'firebase/firestore';
+import { collection, getDocs, doc, writeBatch } from 'firebase/firestore';
 import { SummarySection } from '@/components/dashboard/admin/delegates/summary';
 import { DelegatesTable } from '@/components/dashboard/admin/delegates/table';
 import { AdminPageLoader } from '@/components/dashboard/admin/loader';
 import { Delegate, Committee } from '@/lib/types';
 import { toast, Toaster } from 'sonner';
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export default function DelegatesPage() {
     const db = useFirestore();
@@ -15,6 +17,9 @@ export default function DelegatesPage() {
     const [committees, setCommittees] = useState<Committee[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [searchTerm, setSearchTerm] = useState('');
+    const [paymentFilter, setPaymentFilter] = useState('all');
+    const [assignmentFilter, setAssignmentFilter] = useState('all');
 
     useEffect(() => {
         const fetchData = async () => {
@@ -56,7 +61,6 @@ export default function DelegatesPage() {
              });
             await batch.commit();
 
-            // Update local state for immediate UI feedback
             setDelegates(prev => prev.map(d => d.id === delegateId ? { ...d, assignedCommitteeId: committeeId, assignedCountry: country, assignmentStatus: 'Assigned' } : d));
             toast.success(`Assigned ${country} in ${selectedCommittee.name} to delegate.`);
 
@@ -65,6 +69,24 @@ export default function DelegatesPage() {
             toast.error("Failed to assign committee.");
         }
     };
+
+    const filteredDelegates = useMemo(() => {
+        return delegates
+            .filter(delegate => {
+                const searchTermLower = searchTerm.toLowerCase();
+                return delegate.name.toLowerCase().includes(searchTermLower) || delegate.email.toLowerCase().includes(searchTermLower);
+            })
+            .filter(delegate => {
+                if (paymentFilter === 'all') return true;
+                return delegate.paymentStatus === paymentFilter;
+            })
+            .filter(delegate => {
+                if (assignmentFilter === 'all') return true;
+                if (assignmentFilter === 'assigned') return !!delegate.assignedCommitteeId;
+                if (assignmentFilter === 'unassigned') return !delegate.assignedCommitteeId;
+                return true;
+            });
+    }, [delegates, searchTerm, paymentFilter, assignmentFilter]);
 
     if (loading) {
         return <AdminPageLoader />;
@@ -80,8 +102,39 @@ export default function DelegatesPage() {
             <h1 className="text-2xl font-bold mb-4">Delegates Management</h1>
             <SummarySection delegates={delegates} />
             <div className="mt-6">
+                <div className="flex items-center gap-4 mb-4">
+                    <Input 
+                        placeholder="Search by name or email..." 
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="max-w-sm"
+                    />
+                    <Select value={paymentFilter} onValueChange={setPaymentFilter}>
+                        <SelectTrigger className="w-[180px]">
+                            <SelectValue placeholder="Filter by payment" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="all">All Payment Statuses</SelectItem>
+                            <SelectItem value="Verified">Verified</SelectItem>
+                            <SelectItem value="Unverified">Unverified</SelectItem>
+                        </SelectContent>
+                    </Select>
+                     <Select value={assignmentFilter} onValueChange={setAssignmentFilter}>
+                        <SelectTrigger className="w-[180px]">
+                            <SelectValue placeholder="Filter by assignment" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="all">All Assignments</SelectItem>
+                            <SelectItem value="assigned">Assigned</SelectItem>
+                            <SelectItem value="unassigned">Unassigned</SelectItem>
+                        </SelectContent>
+                    </Select>
+                </div>
+                <div className="text-sm text-muted-foreground mb-2">
+                    Showing {filteredDelegates.length} of {delegates.length} delegates.
+                </div>
                 <DelegatesTable 
-                    delegates={delegates} 
+                    delegates={filteredDelegates} 
                     committees={committees} 
                     onAssignCommittee={handleAssignCommittee} 
                 />

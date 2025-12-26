@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useFirestore } from '@/firebase/provider';
 import { collection, getDocs, doc, writeBatch, Timestamp } from 'firebase/firestore';
 import { AdminPageLoader } from '@/components/dashboard/admin/loader';
@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Input } from "@/components/ui/input";
 
 // Helper to format Firestore Timestamps
 const formatDate = (timestamp: Timestamp | Date | undefined) => {
@@ -29,6 +30,8 @@ export default function AdminPaymentsPage() {
     const [delegates, setDelegates] = useState<Delegate[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [searchTerm, setSearchTerm] = useState('');
+    const [paymentFilter, setPaymentFilter] = useState('all');
 
     useEffect(() => {
         const fetchData = async () => {
@@ -58,7 +61,6 @@ export default function AdminPaymentsPage() {
             batch.update(delegateRef, { paymentStatus: newStatus });
             await batch.commit();
 
-            // Update local state for immediate UI feedback
             setDelegates(prev => prev.map(d => d.id === delegateId ? { ...d, paymentStatus: newStatus } : d));
             toast.success(`Payment status for delegate updated to ${newStatus}.`);
 
@@ -67,6 +69,19 @@ export default function AdminPaymentsPage() {
             toast.error("Failed to update payment status.");
         }
     };
+    
+    const filteredDelegates = useMemo(() => {
+        return delegates
+            .filter(delegate => {
+                const searchTermLower = searchTerm.toLowerCase();
+                return delegate.name.toLowerCase().includes(searchTermLower) || delegate.email.toLowerCase().includes(searchTermLower);
+            })
+            .filter(delegate => {
+                if (paymentFilter === 'all') return true;
+                return delegate.paymentStatus === paymentFilter;
+            });
+    }, [delegates, searchTerm, paymentFilter]);
+
 
     if (loading) {
         return <AdminPageLoader />;
@@ -87,13 +102,34 @@ export default function AdminPaymentsPage() {
             </div>
 
             <Card>
-                <CardHeader>
+                 <CardHeader>
                     <CardTitle>Registration Payments</CardTitle>
                     <CardDescription>
                         Change the payment status using the dropdown next to each delegate.
                     </CardDescription>
+                     <div className="flex items-center gap-4 pt-4">
+                        <Input 
+                            placeholder="Search by name or email..." 
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="max-w-sm"
+                        />
+                        <Select value={paymentFilter} onValueChange={setPaymentFilter}>
+                            <SelectTrigger className="w-[180px]">
+                                <SelectValue placeholder="Filter by payment" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="all">All Payment Statuses</SelectItem>
+                                <SelectItem value="Verified">Verified</SelectItem>
+                                <SelectItem value="Unverified">Unverified</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
                 </CardHeader>
                 <CardContent>
+                    <div className="text-sm text-muted-foreground mb-2">
+                        Showing {filteredDelegates.length} of {delegates.length} payments.
+                    </div>
                     <Table>
                         <TableHeader>
                             <TableRow>
@@ -104,7 +140,7 @@ export default function AdminPaymentsPage() {
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {delegates.map(reg => (
+                            {filteredDelegates.map(reg => (
                                 <TableRow key={reg.id}>
                                     <TableCell className="font-medium">{reg.name || 'N/A'}</TableCell>
                                     <TableCell>{reg.email}</TableCell>
