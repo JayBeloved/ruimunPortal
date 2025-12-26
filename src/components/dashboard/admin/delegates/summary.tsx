@@ -10,7 +10,7 @@ interface SummaryProps {
 
 export function SummarySection({ delegates }: SummaryProps) {
     const totalDelegates = delegates.length;
-    const assignedDelegates = delegates.filter(d => d.committee).length;
+    const assignedDelegates = delegates.filter(d => d.assignedCommitteeId).length;
     const verifiedPayments = delegates.filter(d => d.paymentStatus === 'Verified').length;
     const unverifiedPayments = totalDelegates - verifiedPayments;
 

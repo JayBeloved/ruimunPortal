@@ -28,10 +28,8 @@ export function StatusCards({ delegate, committee }: StatusCardsProps) {
   const getPaymentBadgeVariant = (status: Delegate['paymentStatus']) => {
     switch (status) {
       case "Verified":
-        return "default";
-      case "Pending":
-        return "secondary";
-      case "Not Paid":
+        return "success";
+      case "Unverified":
         return "destructive";
       default:
         return "outline";
@@ -76,7 +74,7 @@ export function StatusCards({ delegate, committee }: StatusCardsProps) {
             {committee ? committee.name : "Pending"}
           </div>
           <p className="text-xs text-muted-foreground">
-            {committee ? "Your assigned committee." : "Assignment is in progress."}
+            {committee ? `Country: ${delegate.assignedCountry}` : "Assignment is in progress."}
           </p>
         </CardContent>
       </Card>

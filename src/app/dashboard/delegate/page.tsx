@@ -2,12 +2,11 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc, collection, getDocs } from 'firebase/firestore';
 
 import { useAuth, useFirestore } from '@/firebase/provider';
 import { StatusCards } from '@/components/dashboard/delegate/status-cards';
 import type { Delegate, Committee } from '@/lib/types';
-import { committees as allCommittees } from '@/lib/data';
 import { Skeleton } from '@/components/ui/skeleton';
 
 function DashboardLoading() {
@@ -29,38 +28,48 @@ export default function DelegateDashboardPage() {
   const router = useRouter();
 
   useEffect(() => {
-    if (authLoading) {
-      return; // Wait for authentication to complete
+    if (authLoading || !db) {
+      return;
     }
 
     if (!user) {
       router.push('/');
       return;
     }
-    
-    if (!db) {
-      return;
-    }
 
-    const docRef = doc(db, "registrations", user.uid);
-    getDoc(docRef).then(docSnap => {
-      if (docSnap.exists()) {
-        const delegateData = docSnap.data() as Delegate;
-        setDelegate(delegateData);
-        if (delegateData.committeeId) {
-          const assignedCommittee = allCommittees.find(c => c.id === delegateData.committeeId);
-          setCommittee(assignedCommittee || null);
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        const delegateDocRef = doc(db, "registrations", user.uid);
+        const committeesCollectionRef = collection(db, "committees");
+
+        const [delegateDocSnap, committeesSnapshot] = await Promise.all([
+            getDoc(delegateDocRef),
+            getDocs(committeesCollectionRef)
+        ]);
+
+        if (delegateDocSnap.exists()) {
+          const delegateData = delegateDocSnap.data() as Delegate;
+          setDelegate(delegateData);
+
+          const committeesData = committeesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Committee[];
+
+          if (delegateData.assignedCommitteeId) {
+            const assignedCommittee = committeesData.find(c => c.id === delegateData.assignedCommitteeId);
+            setCommittee(assignedCommittee || null);
+          }
+        } else {
+          router.push('/dashboard/delegate/registration');
         }
-      } else {
+      } catch (err) {
+        console.error("Firestore error:", err);
         router.push('/dashboard/delegate/registration');
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
-    }).catch(err => {
-      console.error("Firestore error:", err);
-      // Redirect to registration on error as a fallback
-      router.push('/dashboard/delegate/registration');
-      setLoading(false);
-    });
+    };
+
+    fetchData();
 
   }, [user, authLoading, db, router]);
 
@@ -72,6 +81,5 @@ export default function DelegateDashboardPage() {
     return <StatusCards delegate={delegate} committee={committee} />;
   }
   
-  // This can be reached if a redirect is in progress or data is missing
   return <DashboardLoading />;
 }

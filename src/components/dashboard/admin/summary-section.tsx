@@ -3,7 +3,7 @@
 import { useMemo } from 'react';
 import { Delegate, Committee } from '@/lib/types';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { Skeleton } from '@/components/ui/skeleton';
 
 interface SummarySectionProps {
@@ -12,6 +12,7 @@ interface SummarySectionProps {
   loading: boolean;
 }
 
+// Reusable component for displaying a single statistic
 function StatCard({ title, value, loading }: { title: string, value: string | number, loading: boolean }) {
     return (
         <Card>
@@ -25,31 +26,39 @@ function StatCard({ title, value, loading }: { title: string, value: string | nu
     );
 }
 
+// Main component to display all summary statistics and charts
 export function SummarySection({ delegates, committees, loading }: SummarySectionProps) {
 
+    // Memoized calculation for key delegate statistics
     const delegateStats = useMemo(() => {
         const redeemer = delegates.filter(d => d.delegate_type === 'redeemer').length;
         const nigerian = delegates.filter(d => d.delegate_type === 'nigerian').length;
         const international = delegates.filter(d => d.delegate_type === 'international').length;
         const total = delegates.length;
         
-        const assigned = delegates.filter(d => d.assigned_committee && d.assigned_country).length;
-        const verifiedPayments = delegates.filter(d => d.payment_status === 'verified').length;
+        // REFACTORED: Use `assignedCommitteeId` and `paymentStatus`
+        const assigned = delegates.filter(d => !!d.assignedCommitteeId).length;
+        const verifiedPayments = delegates.filter(d => d.paymentStatus === 'Verified').length;
 
         return { redeemer, nigerian, international, total, assigned, verifiedPayments };
     }, [delegates]);
 
+    // Memoized calculation for the distribution of 1st choice committee preferences
     const committeeDistribution = useMemo(() => {
         const distribution = new Map<string, number>();
+        
         delegates.forEach(delegate => {
-            if (delegate.committee1) {
-                distribution.set(delegate.committee1, (distribution.get(delegate.committee1) || 0) + 1);
+            // REFACTORED: Use the `preferences` array
+            const firstChoice = delegate.preferences?.find(p => p.order === 1);
+            if (firstChoice && firstChoice.committeeId) {
+                // Find the committee name from its ID
+                const committeeName = committees.find(c => c.id === firstChoice.committeeId)?.name || 'Unknown';
+                distribution.set(committeeName, (distribution.get(committeeName) || 0) + 1);
             }
         });
-        return Array.from(distribution, ([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value);
-    }, [delegates]);
 
-    const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d'];
+        return Array.from(distribution, ([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value);
+    }, [delegates, committees]);
 
     return (
         <section className="space-y-6">
@@ -59,7 +68,7 @@ export function SummarySection({ delegates, committees, loading }: SummarySectio
                 <StatCard title="Nigerian Delegates" value={delegateStats.nigerian} loading={loading} />
                 <StatCard title="International Delegates" value={delegateStats.international} loading={loading} />
             </div>
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-2">
+            <div className="grid gap-4 md:grid-cols-2">
                  <StatCard title="Verified Payments" value={delegateStats.verifiedPayments} loading={loading} />
                  <StatCard title="Assigned Delegates" value={delegateStats.assigned} loading={loading} />
             </div>

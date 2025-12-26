@@ -1,146 +1,158 @@
 'use client';
 
-import { useState } from 'react';
-import { 
-    Table, 
-    TableHeader, 
-    TableRow, 
-    TableHead, 
-    TableBody, 
-    TableCell 
-} from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { 
-    DropdownMenu, 
-    DropdownMenuContent, 
-    DropdownMenuItem, 
-    DropdownMenuTrigger 
-} from '@/components/ui/dropdown-menu';
-import { 
-    Dialog, 
-    DialogContent, 
-    DialogHeader, 
-    DialogTitle, 
-    DialogTrigger 
-} from '@/components/ui/dialog';
-import { 
-    Select, 
-    SelectContent, 
-    SelectItem, 
-    SelectTrigger, 
-    SelectValue 
-} from '@/components/ui/select';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { useState, useMemo } from 'react';
 import { Delegate, Committee } from '@/lib/types';
-import { MoreHorizontal, Edit, CheckCircle, XCircle } from 'lucide-react';
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
 
-interface TableProps {
+interface Props {
     delegates: Delegate[];
     committees: Committee[];
-    onUpdatePayment: (delegateId: string, status: 'Verified' | 'Unverified') => void;
-    onAssignCommittee: (delegateId: string, committeeId: string) => void;
+    onAssignCommittee: (delegateId: string, committeeId: string, country: string) => Promise<void>;
 }
 
-export function DelegatesTable({ delegates, committees, onUpdatePayment, onAssignCommittee }: TableProps) {
+export function DelegatesTable({ delegates, committees, onAssignCommittee }: Props) {
     const [selectedDelegate, setSelectedDelegate] = useState<Delegate | null>(null);
-    const [selectedCommittee, setSelectedCommittee] = useState<string>('');
+    const [selectedCommitteeId, setSelectedCommitteeId] = useState<string>('');
+    const [selectedCountry, setSelectedCountry] = useState<string>('');
 
-    const handleOpenAssignDialog = (delegate: Delegate) => {
+    const committeeMap = useMemo(() => new Map(committees.map(c => [c.id, c.name])), [committees]);
+
+    const handleOpenDialog = (delegate: Delegate) => {
         setSelectedDelegate(delegate);
-        setSelectedCommittee(delegate.committee || '');
+        setSelectedCommitteeId(delegate.assignedCommitteeId || '');
+        setSelectedCountry(delegate.assignedCountry || '');
     };
 
-    const handleConfirmAssignment = () => {
-        if (selectedDelegate && selectedCommittee) {
-            onAssignCommittee(selectedDelegate.id, selectedCommittee);
-            // Close dialog logic can be handled here or by the Dialog component itself
+    const handleSubmit = async () => {
+        if (selectedDelegate && selectedCommitteeId && selectedCountry) {
+            await onAssignCommittee(selectedDelegate.id, selectedCommitteeId, selectedCountry);
+            setSelectedDelegate(null);
         }
     };
 
-    const getCommitteeName = (committeeId: string) => {
+    const getAvailableCountries = (committeeId: string): string[] => {
         const committee = committees.find(c => c.id === committeeId);
-        return committee ? committee.name : 'Not Assigned';
+        if (!committee) return [];
+
+        const assignedCountries = delegates
+            .filter(d => d.assignedCommitteeId === committeeId)
+            .map(d => d.assignedCountry);
+            
+        return committee.countries.filter(country => !assignedCountries.includes(country!));
     };
 
+    const isAssignmentDisabled = (delegate: Delegate) => {
+        return delegate.paymentStatus !== 'Verified';
+    };
+
+    const handleCommitteeChange = (committeeId: string) => {
+        setSelectedCommitteeId(committeeId);
+        setSelectedCountry(''); // Reset country selection
+    }
+
     return (
-        <Card>
-            <CardHeader>
-                <CardTitle>All Delegates</CardTitle>
-                <CardDescription>View and manage all registered delegates.</CardDescription>
-            </CardHeader>
-            <CardContent>
-                <Table>
-                    <TableHeader>
-                        <TableRow>
-                            <TableHead>Full Name</TableHead>
-                            <TableHead>Institution</TableHead>
-                            <TableHead>Payment Status</TableHead>
-                            <TableHead>Committee</TableHead>
-                            <TableHead>Actions</TableHead>
+        <>
+            <Table>
+                <TableHeader>
+                    <TableRow>
+                        <TableHead>Name</TableHead>
+                        <TableHead>Affiliation</TableHead>
+                        <TableHead>Payment Status</TableHead>
+                        <TableHead>Assigned Committee</TableHead>
+                        <TableHead>Assigned Country</TableHead>
+                        <TableHead className="text-right">Actions</TableHead>
+                    </TableRow>
+                </TableHeader>
+                <TableBody>
+                    {delegates.map((delegate) => (
+                        <TableRow key={delegate.id}>
+                            <TableCell>{delegate.name}</TableCell>
+                            <TableCell>{delegate.affiliation}</TableCell>
+                            <TableCell>
+                                <Badge variant={delegate.paymentStatus === 'Verified' ? 'success' : 'destructive'}>
+                                    {delegate.paymentStatus}
+                                </Badge>
+                            </TableCell>
+                            <TableCell>{committeeMap.get(delegate.assignedCommitteeId || '') || 'N/A'}</TableCell>
+                            <TableCell>{delegate.assignedCountry || 'N/A'}</TableCell>
+                            <TableCell className="text-right">
+                                <Dialog onOpenChange={(isOpen) => !isOpen && setSelectedDelegate(null)}>
+                                    <DialogTrigger asChild>
+                                        <Button 
+                                            variant="outline" 
+                                            size="sm"
+                                            onClick={() => handleOpenDialog(delegate)}
+                                            disabled={isAssignmentDisabled(delegate)}
+                                        >
+                                            {delegate.assignedCommitteeId ? 'Edit Assignment' : 'Assign'}
+                                        </Button>
+                                    </DialogTrigger>
+                                    {selectedDelegate?.id === delegate.id && (
+                                        <DialogContent>
+                                            <DialogHeader>
+                                                <DialogTitle>Assign Committee for {selectedDelegate.name}</DialogTitle>
+                                            </DialogHeader>
+                                            <div className="space-y-4 py-4">
+                                                <div className="text-sm">
+                                                    <h4 className="font-semibold mb-2">Preferences:</h4>
+                                                    {selectedDelegate.preferences?.length > 0 ? (
+                                                        <ul className="list-decimal list-inside text-gray-600">
+                                                            {selectedDelegate.preferences.sort((a,b) => a.order - b.order).map(pref => (
+                                                                <li key={pref.order}>{committeeMap.get(pref.committeeId)} - {pref.country}</li>
+                                                            ))}
+                                                        </ul>
+                                                    ) : <p>No preferences submitted.</p>}
+                                                </div>
+                                                
+                                                <div>
+                                                    <label className="block text-sm font-medium mb-1">Committee</label>
+                                                    <Select onValueChange={handleCommitteeChange} value={selectedCommitteeId}>
+                                                        <SelectTrigger><SelectValue placeholder="Select a committee" /></SelectTrigger>
+                                                        <SelectContent>
+                                                            {committees.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                                                        </SelectContent>
+                                                    </Select>
+                                                </div>
+
+                                                <div>
+                                                    <label className="block text-sm font-medium mb-1">Country</label>
+                                                    <Select onValueChange={setSelectedCountry} value={selectedCountry} disabled={!selectedCommitteeId}>
+                                                        <SelectTrigger><SelectValue placeholder="Select a country" /></SelectTrigger>
+                                                        <SelectContent>
+                                                            {getAvailableCountries(selectedCommitteeId).map(country => <SelectItem key={country} value={country}>{country}</SelectItem>)}
+                                                        </SelectContent>
+                                                    </Select>
+                                                </div>
+
+                                                <Button onClick={handleSubmit} className="w-full" disabled={!selectedCommitteeId || !selectedCountry}>
+                                                    Confirm Assignment
+                                                </Button>
+                                            </div>
+                                        </DialogContent>
+                                    )}
+                                </Dialog>
+                            </TableCell>
                         </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {delegates.map((delegate) => (
-                            <TableRow key={delegate.id}>
-                                <TableCell className="font-medium">{delegate.fullName}</TableCell>
-                                <TableCell>{delegate.institution}</TableCell>
-                                <TableCell>
-                                    <Badge variant={delegate.paymentStatus === 'Verified' ? 'success' : 'destructive'}>
-                                        {delegate.paymentStatus}
-                                    </Badge>
-                                </TableCell>
-                                <TableCell>{getCommitteeName(delegate.committee)}</TableCell>
-                                <TableCell>
-                                    <DropdownMenu>
-                                        <DropdownMenuTrigger asChild>
-                                            <Button variant="ghost" className="h-8 w-8 p-0">
-                                                <span className="sr-only">Open menu</span>
-                                                <MoreHorizontal className="h-4 w-4" />
-                                            </Button>
-                                        </DropdownMenuTrigger>
-                                        <DropdownMenuContent align="end">
-                                            <DropdownMenuItem onSelect={() => onUpdatePayment(delegate.id, 'Verified')}>
-                                                <CheckCircle className="mr-2 h-4 w-4" /> Mark as Verified
-                                            </DropdownMenuItem>
-                                            <DropdownMenuItem onSelect={() => onUpdatePayment(delegate.id, 'Unverified')}>
-                                                <XCircle className="mr-2 h-4 w-4" /> Mark as Unverified
-                                            </DropdownMenuItem>
-                                            <Dialog>
-                                                <DialogTrigger asChild>
-                                                    <Button variant="ghost" className="w-full justify-start p-2" onClick={() => handleOpenAssignDialog(delegate)}>
-                                                        <Edit className="mr-2 h-4 w-4" /> Assign Committee
-                                                    </Button>
-                                                </DialogTrigger>
-                                                {selectedDelegate && (
-                                                <DialogContent>
-                                                    <DialogHeader>
-                                                        <DialogTitle>Assign Committee for {selectedDelegate.fullName}</DialogTitle>
-                                                    </DialogHeader>
-                                                    <div className="grid gap-4 py-4">
-                                                        <Select onValueChange={setSelectedCommittee} value={selectedCommittee}>
-                                                            <SelectTrigger>
-                                                                <SelectValue placeholder="Select a committee" />
-                                                            </SelectTrigger>
-                                                            <SelectContent>
-                                                                {committees.map((committee) => (
-                                                                    <SelectItem key={committee.id} value={committee.id}>{committee.name}</SelectItem>
-                                                                ))}
-                                                            </SelectContent>
-                                                        </Select>
-                                                    </div>
-                                                    <Button onClick={handleConfirmAssignment}>Confirm Assignment</Button>
-                                                </DialogContent>
-                                                )}
-                                            </Dialog>
-                                        </DropdownMenuContent>
-                                    </DropdownMenu>
-                                </TableCell>
-                            </TableRow>
-                        ))}
-                    </TableBody>
-                </Table>
-            </CardContent>
-        </Card>
+                    ))}
+                </TableBody>
+            </Table>
+        </>
     );
 }

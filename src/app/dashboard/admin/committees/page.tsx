@@ -20,15 +20,20 @@ export default function CommitteesPage() {
             if (!db) return;
             setLoading(true);
             try {
-                // Fetch Delegates
-                const delegatesSnapshot = await getDocs(collection(db, 'delegates'));
+                // Fetch Delegates from the correct 'registrations' collection
+                const delegatesSnapshot = await getDocs(collection(db, 'registrations'));
                 const delegatesData = delegatesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Delegate[];
                 setDelegates(delegatesData);
 
-                // Fetch Committees
-                const committeesSnapshot = await getDocs(collection(db, 'committees'));
-                const committeesData = committeesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Committee[];
-                setCommittees(committeesData);
+                // Attempt to fetch Committees, but handle failure gracefully
+                try {
+                    const committeesSnapshot = await getDocs(collection(db, 'committees'));
+                    const committeesData = committeesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Committee[];
+                    setCommittees(committeesData);
+                } catch (committeeError) {
+                    console.warn("Could not fetch 'committees' collection. This is expected if it hasn't been created yet.");
+                    setCommittees([]); // Default to an empty array
+                }
 
             } catch (err) {
                 console.error("Error fetching data:", err);

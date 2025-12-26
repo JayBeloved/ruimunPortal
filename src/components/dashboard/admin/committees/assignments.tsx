@@ -17,6 +17,7 @@ import {
     TableRow,
 } from "@/components/ui/table"
 import { Delegate, Committee } from '@/lib/types';
+import { useMemo } from 'react';
 
 interface AssignmentsProps {
     committees: Committee[];
@@ -26,32 +27,30 @@ interface AssignmentsProps {
 export function CommitteeAssignments({ committees, delegates }: AssignmentsProps) {
 
     const getDelegatesByCommittee = (committeeId: string) => {
-        return delegates.filter(d => d.committee === committeeId);
+        return delegates.filter(d => d.assignedCommitteeId === committeeId);
     };
 
-    const getAssignmentsByCountry = () => {
+    const countryAssignments = useMemo(() => {
         const assignments: { [country: string]: { delegate: Delegate, committeeName: string }[] } = {};
         delegates.forEach(delegate => {
-            if (delegate.committee) {
-                const committee = committees.find(c => c.id === delegate.committee);
-                if (!assignments[delegate.country]) {
-                    assignments[delegate.country] = [];
+            if (delegate.assignedCommitteeId && delegate.assignedCountry) {
+                const committee = committees.find(c => c.id === delegate.assignedCommitteeId);
+                if (!assignments[delegate.assignedCountry]) {
+                    assignments[delegate.assignedCountry] = [];
                 }
-                assignments[delegate.country].push({ delegate, committeeName: committee?.name || 'N/A' });
+                assignments[delegate.assignedCountry].push({ delegate, committeeName: committee?.name || 'N/A' });
             }
         });
         return assignments;
-    };
-
-    const countryAssignments = getAssignmentsByCountry();
+    }, [delegates, committees]);
 
     return (
         <Tabs defaultValue={committees.length > 0 ? committees[0].id : 'country-view'}>
-            <TabsList className="grid w-full grid-cols-1 md:grid-cols-3 lg:grid-cols-4">
+            <TabsList className="h-auto flex-wrap justify-start">
                 {committees.map((committee) => (
-                    <TabsTrigger key={committee.id} value={committee.id}>{committee.name}</TabsTrigger>
+                    <TabsTrigger key={committee.id} value={committee.id} className="m-1">{committee.name}</TabsTrigger>
                 ))}
-                <TabsTrigger value="country-view">View by Country</TabsTrigger>
+                <TabsTrigger value="country-view" className="m-1">View by Country</TabsTrigger>
             </TabsList>
 
             {committees.map((committee) => (
@@ -74,8 +73,8 @@ export function CommitteeAssignments({ committees, delegates }: AssignmentsProps
                                 <TableBody>
                                     {getDelegatesByCommittee(committee.id).map(delegate => (
                                         <TableRow key={delegate.id}>
-                                            <TableCell>{delegate.fullName}</TableCell>
-                                            <TableCell>{delegate.country}</TableCell>
+                                            <TableCell>{delegate.name}</TableCell>
+                                            <TableCell>{delegate.assignedCountry}</TableCell>
                                         </TableRow>
                                     ))}
                                 </TableBody>
@@ -108,7 +107,7 @@ export function CommitteeAssignments({ committees, delegates }: AssignmentsProps
                                     <TableBody>
                                         {countryAssignments[country].map(({ delegate, committeeName }) => (
                                             <TableRow key={delegate.id}>
-                                                <TableCell>{delegate.fullName}</TableCell>
+                                                <TableCell>{delegate.name}</TableCell>
                                                 <TableCell>{committeeName}</TableCell>
                                             </TableRow>
                                         ))}

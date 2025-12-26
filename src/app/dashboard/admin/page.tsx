@@ -2,10 +2,9 @@
 
 import { useEffect, useState } from 'react';
 import { collection, getDocs } from 'firebase/firestore';
-import { useAuth, useFirestore } from '@/firebase/provider';
+import { useAuth } from '@/firebase/provider';
 import { SummarySection } from "@/components/dashboard/admin/summary-section";
-import { Delegate } from '@/lib/types';
-import { committees } from "@/lib/data"; 
+import { Delegate, Committee } from '@/lib/types';
 import { AdminPageLoader } from '@/components/dashboard/admin/loader';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
@@ -15,8 +14,8 @@ export default function AdminDashboardPage() {
   const { db, isAdmin, loading: authLoading } = useAuth();
   const router = useRouter();
   const [delegates, setDelegates] = useState<Delegate[]>([]);
+  const [committees, setCommittees] = useState<Committee[]>([]); // New state for committees
   const [loading, setLoading] = useState(true);
-  const allCommittees = committees; 
 
   useEffect(() => {
     if (authLoading) return;
@@ -30,27 +29,34 @@ export default function AdminDashboardPage() {
         return;
     };
 
-    const fetchDelegates = async () => {
+    const fetchData = async () => {
         setLoading(true);
         try {
-            const delegatesCollection = collection(db, 'registrations');
-            const snapshot = await getDocs(delegatesCollection);
+            // Fetch both delegates and committees in parallel
+            const [delegatesSnapshot, committeesSnapshot] = await Promise.all([
+                getDocs(collection(db, 'registrations')),
+                getDocs(collection(db, 'committees'))
+            ]);
 
-            const fetchedDelegates = snapshot.docs.map(doc => ({
+            const fetchedDelegates = delegatesSnapshot.docs.map(doc => ({
                 id: doc.id,
                 ...doc.data(),
             })) as Delegate[];
 
+            const fetchedCommittees = committeesSnapshot.docs.map(doc => doc.data() as Committee);
+
             setDelegates(fetchedDelegates);
+            setCommittees(fetchedCommittees); // Set the fetched committees
+
         } catch (error: any) {
-            console.error("Failed to fetch delegates:", error);
-            toast.error("Failed to fetch delegate data.", { description: error.message });
+            console.error("Failed to fetch admin data:", error);
+            toast.error("Failed to fetch dashboard data.", { description: error.message });
         } finally {
             setLoading(false);
         }
     }
 
-    fetchDelegates();
+    fetchData();
 
   }, [db, isAdmin, authLoading, router]);
 
@@ -69,7 +75,8 @@ export default function AdminDashboardPage() {
             </p>
         </div>
       </div>
-      <SummarySection delegates={delegates} committees={allCommittees} loading={loading} />
+      {/* Pass the dynamically fetched committees to the summary section */}
+      <SummarySection delegates={delegates} committees={committees} loading={loading} />
     </div>
   );
 }
