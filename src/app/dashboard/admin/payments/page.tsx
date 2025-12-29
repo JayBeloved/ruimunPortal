@@ -6,19 +6,12 @@ import { collection, getDocs, doc, writeBatch, Timestamp } from 'firebase/firest
 import { AdminPageLoader } from '@/components/dashboard/admin/loader';
 import { Delegate, PaymentStatus } from '@/lib/types';
 import { toast, Toaster } from 'sonner';
-import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from "@/components/ui/table";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from "@/components/ui/input";
+import { Button } from '@/components/ui/button';
 
-// Helper to format Firestore Timestamps
 const formatDate = (timestamp: Timestamp | Date | undefined) => {
     if (!timestamp) return 'N/A';
     const date = timestamp instanceof Timestamp ? timestamp.toDate() : timestamp;
@@ -32,6 +25,10 @@ export default function AdminPaymentsPage() {
     const [error, setError] = useState<string | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
     const [paymentFilter, setPaymentFilter] = useState('all');
+    const [departmentFilter, setDepartmentFilter] = useState('all');
+    const [currentPage, setCurrentPage] = useState(1);
+
+    const PAYMENTS_PER_PAGE = 20;
 
     useEffect(() => {
         const fetchData = async () => {
@@ -57,13 +54,9 @@ export default function AdminPaymentsPage() {
         if (!db) return;
         try {
             const delegateRef = doc(db, 'registrations', delegateId);
-            const batch = writeBatch(db);
-            batch.update(delegateRef, { paymentStatus: newStatus });
-            await batch.commit();
-
+            await writeBatch(db).update(delegateRef, { paymentStatus: newStatus }).commit();
             setDelegates(prev => prev.map(d => d.id === delegateId ? { ...d, paymentStatus: newStatus } : d));
             toast.success(`Payment status for delegate updated to ${newStatus}.`);
-
         } catch (error) {
             console.error("Error updating payment status:", error);
             toast.error("Failed to update payment status.");
@@ -79,17 +72,26 @@ export default function AdminPaymentsPage() {
             .filter(delegate => {
                 if (paymentFilter === 'all') return true;
                 return delegate.paymentStatus === paymentFilter;
+            })
+            .filter(delegate => {
+                if (departmentFilter === 'all') return true;
+                if (departmentFilter === 'his') {
+                    const department = delegate.department?.toLowerCase().trim();
+                    return delegate.delegate_type === 'redeemer' && (department === 'history and international studies' || department === 'his' || department === 'history and international relations');
+                }
+                return true;
             });
-    }, [delegates, searchTerm, paymentFilter]);
+    }, [delegates, searchTerm, paymentFilter, departmentFilter]);
 
+    const paginatedDelegates = useMemo(() => {
+        const startIndex = (currentPage - 1) * PAYMENTS_PER_PAGE;
+        return filteredDelegates.slice(startIndex, startIndex + PAYMENTS_PER_PAGE);
+    }, [filteredDelegates, currentPage]);
 
-    if (loading) {
-        return <AdminPageLoader />;
-    }
+    const totalPages = Math.ceil(filteredDelegates.length / PAYMENTS_PER_PAGE);
 
-    if (error) {
-        return <p className="text-red-500 p-4">{error}</p>;
-    }
+    if (loading) return <AdminPageLoader />;
+    if (error) return <p className="text-red-500 p-4">{error}</p>;
 
     return (
         <div className="p-4 md:p-6">
@@ -107,14 +109,14 @@ export default function AdminPaymentsPage() {
                     <CardDescription>
                         Change the payment status using the dropdown next to each delegate.
                     </CardDescription>
-                     <div className="flex items-center gap-4 pt-4">
+                     <div className="flex flex-wrap items-center gap-4 pt-4">
                         <Input 
                             placeholder="Search by name or email..." 
                             value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
+                            onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
                             className="max-w-sm"
                         />
-                        <Select value={paymentFilter} onValueChange={setPaymentFilter}>
+                        <Select value={paymentFilter} onValueChange={(value) => { setPaymentFilter(value); setCurrentPage(1); }}>
                             <SelectTrigger className="w-[180px]">
                                 <SelectValue placeholder="Filter by payment" />
                             </SelectTrigger>
@@ -124,11 +126,20 @@ export default function AdminPaymentsPage() {
                                 <SelectItem value="Unverified">Unverified</SelectItem>
                             </SelectContent>
                         </Select>
+                        <Select value={departmentFilter} onValueChange={(value) => { setDepartmentFilter(value); setCurrentPage(1); }}>
+                            <SelectTrigger className="w-[200px]">
+                                <SelectValue placeholder="Filter by department" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="all">All Delegates</SelectItem>
+                                <SelectItem value="his">RUN HIS Students</SelectItem>
+                            </SelectContent>
+                        </Select>
                     </div>
                 </CardHeader>
                 <CardContent>
                     <div className="text-sm text-muted-foreground mb-2">
-                        Showing {filteredDelegates.length} of {delegates.length} payments.
+                        Showing {paginatedDelegates.length} of {filteredDelegates.length} payments.
                     </div>
                     <Table>
                         <TableHeader>
@@ -140,7 +151,7 @@ export default function AdminPaymentsPage() {
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {filteredDelegates.map(reg => (
+                            {paginatedDelegates.map(reg => (
                                 <TableRow key={reg.id}>
                                     <TableCell className="font-medium">{reg.name || 'N/A'}</TableCell>
                                     <TableCell>{reg.email}</TableCell>
@@ -163,6 +174,25 @@ export default function AdminPaymentsPage() {
                             ))}
                         </TableBody>
                     </Table>
+                    <div className="flex items-center justify-end space-x-2 py-4">
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                            disabled={currentPage === 1}
+                        >
+                            Previous
+                        </Button>
+                        <span className="text-sm">Page {currentPage} of {totalPages || 1}</span>
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                            disabled={currentPage === totalPages || totalPages === 0}
+                        >
+                            Next
+                        </Button>
+                    </div>
                 </CardContent>
             </Card>
         </div>

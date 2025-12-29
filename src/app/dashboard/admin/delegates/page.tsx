@@ -10,6 +10,8 @@ import { Delegate, Committee } from '@/lib/types';
 import { toast, Toaster } from 'sonner';
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Button } from '@/components/ui/button';
+import { DelegateDetailsModal } from '@/components/dashboard/admin/delegates/details-modal';
 
 export default function DelegatesPage() {
     const db = useFirestore();
@@ -20,6 +22,11 @@ export default function DelegatesPage() {
     const [searchTerm, setSearchTerm] = useState('');
     const [paymentFilter, setPaymentFilter] = useState('all');
     const [assignmentFilter, setAssignmentFilter] = useState('all');
+    const [departmentFilter, setDepartmentFilter] = useState('all');
+    const [currentPage, setCurrentPage] = useState(1);
+    const [selectedDelegate, setSelectedDelegate] = useState<Delegate | null>(null);
+
+    const DELEGATES_PER_PAGE = 20;
 
     useEffect(() => {
         const fetchData = async () => {
@@ -70,6 +77,14 @@ export default function DelegatesPage() {
         }
     };
 
+    const handleViewDetails = (delegate: Delegate) => {
+        setSelectedDelegate(delegate);
+    };
+
+    const handleCloseModal = () => {
+        setSelectedDelegate(null);
+    };
+
     const filteredDelegates = useMemo(() => {
         return delegates
             .filter(delegate => {
@@ -85,8 +100,24 @@ export default function DelegatesPage() {
                 if (assignmentFilter === 'assigned') return !!delegate.assignedCommitteeId;
                 if (assignmentFilter === 'unassigned') return !delegate.assignedCommitteeId;
                 return true;
+            })
+            .filter(delegate => {
+                if (departmentFilter === 'all') return true;
+                if (departmentFilter === 'his') {
+                    const department = delegate.department?.toLowerCase().trim();
+                    return delegate.delegate_type === 'redeemer' && (department === 'history and international studies' || department === 'his' || department === 'history and international relations');
+                }
+                return true;
             });
-    }, [delegates, searchTerm, paymentFilter, assignmentFilter]);
+    }, [delegates, searchTerm, paymentFilter, assignmentFilter, departmentFilter]);
+
+    const paginatedDelegates = useMemo(() => {
+        const startIndex = (currentPage - 1) * DELEGATES_PER_PAGE;
+        const endIndex = startIndex + DELEGATES_PER_PAGE;
+        return filteredDelegates.slice(startIndex, endIndex);
+    }, [filteredDelegates, currentPage]);
+
+    const totalPages = Math.ceil(filteredDelegates.length / DELEGATES_PER_PAGE);
 
     if (loading) {
         return <AdminPageLoader />;
@@ -102,14 +133,14 @@ export default function DelegatesPage() {
             <h1 className="text-2xl font-bold mb-4">Delegates Management</h1>
             <SummarySection delegates={delegates} />
             <div className="mt-6">
-                <div className="flex items-center gap-4 mb-4">
+                <div className="flex flex-wrap items-center gap-4 mb-4">
                     <Input 
                         placeholder="Search by name or email..." 
                         value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
+                        onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
                         className="max-w-sm"
                     />
-                    <Select value={paymentFilter} onValueChange={setPaymentFilter}>
+                    <Select value={paymentFilter} onValueChange={(value) => { setPaymentFilter(value); setCurrentPage(1); }}>
                         <SelectTrigger className="w-[180px]">
                             <SelectValue placeholder="Filter by payment" />
                         </SelectTrigger>
@@ -119,7 +150,7 @@ export default function DelegatesPage() {
                             <SelectItem value="Unverified">Unverified</SelectItem>
                         </SelectContent>
                     </Select>
-                     <Select value={assignmentFilter} onValueChange={setAssignmentFilter}>
+                     <Select value={assignmentFilter} onValueChange={(value) => { setAssignmentFilter(value); setCurrentPage(1); }}>
                         <SelectTrigger className="w-[180px]">
                             <SelectValue placeholder="Filter by assignment" />
                         </SelectTrigger>
@@ -129,16 +160,52 @@ export default function DelegatesPage() {
                             <SelectItem value="unassigned">Unassigned</SelectItem>
                         </SelectContent>
                     </Select>
+                    <Select value={departmentFilter} onValueChange={(value) => { setDepartmentFilter(value); setCurrentPage(1); }}>
+                        <SelectTrigger className="w-[200px]">
+                            <SelectValue placeholder="Filter by department" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="all">All Delegates</SelectItem>
+                            <SelectItem value="his">RUN HIS Students</SelectItem>
+                        </SelectContent>
+                    </Select>
                 </div>
-                <div className="text-sm text-muted-foreground mb-2">
-                    Showing {filteredDelegates.length} of {delegates.length} delegates.
+                <div className="text-sm text-muted-foreground mb-4">
+                    Showing {paginatedDelegates.length} of {filteredDelegates.length} delegates.
                 </div>
                 <DelegatesTable 
-                    delegates={filteredDelegates} 
+                    delegates={paginatedDelegates} 
                     committees={committees} 
-                    onAssignCommittee={handleAssignCommittee} 
+                    onAssignCommittee={handleAssignCommittee}
+                    onViewDetails={handleViewDetails}
                 />
+                <div className="flex items-center justify-end space-x-2 py-4">
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                        disabled={currentPage === 1}
+                    >
+                        Previous
+                    </Button>
+                    <span className="text-sm">Page {currentPage} of {totalPages || 1}</span>
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                        disabled={currentPage === totalPages || totalPages === 0}
+                    >
+                        Next
+                    </Button>
+                </div>
             </div>
+            {selectedDelegate && (
+                <DelegateDetailsModal
+                    delegate={selectedDelegate}
+                    isOpen={!!selectedDelegate}
+                    onClose={handleCloseModal}
+                />
+            )}
         </div>
     );
 }

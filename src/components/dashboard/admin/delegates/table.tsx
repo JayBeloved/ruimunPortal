@@ -25,9 +25,10 @@ interface Props {
     delegates: Delegate[];
     committees: Committee[];
     onAssignCommittee: (delegateId: string, committeeId: string, country: string) => Promise<void>;
+    onViewDetails: (delegate: Delegate) => void;
 }
 
-export function DelegatesTable({ delegates, committees, onAssignCommittee }: Props) {
+export function DelegatesTable({ delegates, committees, onAssignCommittee, onViewDetails }: Props) {
     const [selectedDelegate, setSelectedDelegate] = useState<Delegate | null>(null);
     const [selectedCommitteeId, setSelectedCommitteeId] = useState<string>('');
     const [selectedCountry, setSelectedCountry] = useState<string>('');
@@ -92,7 +93,14 @@ export function DelegatesTable({ delegates, committees, onAssignCommittee }: Pro
                             </TableCell>
                             <TableCell>{committeeMap.get(delegate.assignedCommitteeId || '') || 'N/A'}</TableCell>
                             <TableCell>{delegate.assignedCountry || 'N/A'}</TableCell>
-                            <TableCell className="text-right">
+                            <TableCell className="text-right space-x-2">
+                                <Button
+                                    variant="secondary"
+                                    size="sm"
+                                    onClick={() => onViewDetails(delegate)}
+                                >
+                                    View Details
+                                </Button>
                                 <Dialog onOpenChange={(isOpen) => !isOpen && setSelectedDelegate(null)}>
                                     <DialogTrigger asChild>
                                         <Button 
