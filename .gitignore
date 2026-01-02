@@ -33,6 +33,7 @@ yarn-error.log*
 
 # Environment variables
 .env*.local
+.env
 
 # Service account keys
 src/lib/serviceAccountKey.json
