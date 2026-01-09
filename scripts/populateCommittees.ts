@@ -2,21 +2,21 @@
 
 import * as admin from 'firebase-admin';
 import { getFirestore } from 'firebase-admin/firestore';
-import * as fs from 'fs';
-import * as path from 'path';
-import { committees } from '../lib/committees';
+import { committees } from '../src/lib/committees'; // Corrected path to be relative to project root
 
-// CORRECTED PATH: Build path from the project root to the correct key location.
-const serviceAccountPath = path.join(process.cwd(), 'src/lib/serviceAccountKey.json');
-const serviceAccount = JSON.parse(fs.readFileSync(serviceAccountPath, 'utf8'));
-
+// Initialize Firebase using Application Default Credentials
+// This is the recommended and more secure method for server-side scripts
 if (!admin.apps.length) {
-  admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount),
-  });
+  try {
+    admin.initializeApp();
+    console.log('Firebase Admin SDK initialized successfully using Application Default Credentials.');
+  } catch (error) {
+    console.error('Firebase admin initialization error:', error);
+    process.exit(1); // Exit if initialization fails
+  }
 }
 
-// CORRECTED DATABASE: Connect to the 'legacydb' database.
+// Connect to the correct Firestore database
 const firestoreDb = getFirestore(admin.app(), 'legacydb');
 
 async function populateCommittees() {
@@ -32,35 +32,38 @@ async function populateCommittees() {
   let errorCount = 0;
 
   for (const committeeData of committees) {
+    // Ensure the ID from the local file is used as the document ID in Firestore
     const docId = String(committeeData.id);
 
     try {
       const docRef = committeesCollectionRef.doc(docId);
+      // Set the document data, ensuring it includes the id, name, and countries
       await docRef.set({
-        id: docId,
-        name: committeeData.committee,
+        id: docId, // Storing the id within the document as well
+        name: committeeData.committee, // Correct field name is 'committee' in the source
         countries: committeeData.countries,
       });
 
-      console.log(`Successfully added committee: ${committeeData.committee} (ID: ${docId})`);
+      console.log(`Successfully set committee: ${committeeData.committee} (ID: ${docId})`);
       successCount++;
     } catch (error) {
-      console.error(`Error adding committee ${committeeData.committee} (ID: ${docId}):`, error);
+      console.error(`Error setting committee ${committeeData.committee} (ID: ${docId}):`, error);
       errorCount++;
     }
   }
 
   console.log(`\nCommittee population complete.`);
-  console.log(`Successfully added ${successCount} committees.`);
-  console.log(`Failed to add ${errorCount} committees.`);
+  console.log(`Successfully set/updated ${successCount} committees.`);
+  console.log(`Failed on ${errorCount} committees.`);
 }
 
 populateCommittees()
   .then(() => {
-    console.log('Script finished successfully.');
-    process.exit(0);
+    console.log('Script finished executing.');
+    // Using a timeout to ensure all async logs can complete before exit
+    setTimeout(() => process.exit(0), 1000);
   })
   .catch((error) => {
     console.error('Unhandled error during script execution:', error);
-    process.exit(1);
+    setTimeout(() => process.exit(1), 1000);
   });
