@@ -55,6 +55,7 @@ export function DelegateDetailsModal({ delegate, isOpen, onClose }: DelegateDeta
                   ))}
               </div>
             </div>
+            <div><strong>MUN Experience:</strong> <p>{delegate.mun_experience || 'N/A'}</p></div>
           </div>
 
           {/* Column 3: Status & Other Info */}

@@ -3,9 +3,9 @@ export const committees = [
     "id": "unsc",
     "committee": "United Nations Security Council (UNSC)",
     "countries": [
-      "Algeria", "China", "Denmark", "France", "Greece", "Guyana", "Israel",
-      "Pakistan", "Palestine", "Panama", "Republic of Korea", "Russian Federation",
-      "Sierra Leone", "Slovenia", "Somalia", "United Kingdom", "United States of America"
+      "China", "Egypt", "France", "Germany", "India", "Iran", "Israel", "Japan", "Jordan", 
+      "Pakistan", "Palestine", "Russian Federation", "South Korea", "United Kingdom", 
+      "United States of America"
     ]
   },
   {
@@ -24,7 +24,7 @@ export const committees = [
       "Algeria", "Angola", "Benin", "Botswana", "Burkina Faso", "Burundi",
       "Cabo Verde", "Cameroon", "Central African Republic", "Chad", "Comoros",
       "Congo (Brazzaville)", "Cote d'Ivoire", "D.R. Congo (Kinshasa)", "Djibouti",
-      "Egypt", "Equatorial Guinea", "Eritrea", "Eswatini", "Ethiopia", "Gabon",
+      "Egypt", "Equatorial Guinea", "Eritrea", "Ethiopia", "Gabon",
       "Gambia", "Ghana", "Guinea", "Guinea-Bissau", "Kenya", "Lesotho", "Liberia",
       "Libya", "Madagascar", "Malawi", "Mali", "Mauritania", "Mauritius",
       "Morocco", "Mozambique", "Namibia", "Niger", "Nigeria", "Rwanda",
@@ -125,13 +125,13 @@ export const committees = [
       "Albania", "Armenia", "Austria", "Azerbaijan", "Belarus", "Belgium",
       "Bosnia and Herzegovina", "Bulgaria", "Canada", "Croatia", "Cyprus",
       "Czech Republic", "Denmark", "Estonia", "Finland", "France", "Georgia",
-      "Germany", "Greece", "Hungary", "Iceland", "Ireland", "Italy",
+      "Germany", "Greece", "Hungary", "Iceland", "Ireland", "Israel", "Italy",
       "Kazakhstan", "Kyrgyzstan", "Latvia", "Liechtenstein", "Lithuania",
       "Luxembourg", "Malta", "Moldova", "Monaco", "Montenegro",
       "Netherlands", "North Macedonia", "Norway", "Poland", "Portugal",
       "Romania", "Russian Federation", "San Marino", "Serbia", "Slovakia",
       "Slovenia", "Spain", "Sweden", "Switzerland", "Tajikistan", "Turkey",
-      "Ukraine", "United Kingdom", "United States of America"
+      "Ukraine", "United Kingdom", "United States of America", "Uzbekistan"
     ]
   },
   {
@@ -139,9 +139,9 @@ export const committees = [
     "committee": "UN Legal",
     "countries": [
       "Bulgaria", "Canada", "China", "Costa Rica", "Côte d'Ivoire", "Cuba",
-      "Cyprus", "France", "Honduras", "Hungary", "Iraq", "Libya",
-      "Malaysia", "Mali", "Russian Federation", "Senegal", "Spain",
-      "United Kingdom of Great Britain and Northern Ireland", "United States of America"
+      "Cyprus", "France", "Honduras", "Hungary", "Iraq", "Israel", "Libya",
+      "Malaysia", "Mali", "Palestine", "Russian Federation", "Senegal", "Spain",
+      "United Kingdom of Great Britain and Northern Ireland", "United States of America", "Venezuela"
     ]
   }
 ];
