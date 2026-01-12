@@ -8,13 +8,13 @@ import { Delegate, Committee } from '@/lib/types';
 import { AdminPageLoader } from '@/components/dashboard/admin/loader';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
-
+import { CommunicationHub } from '@/components/dashboard/admin/communication-hub';
 
 export default function AdminDashboardPage() {
   const { db, isAdmin, loading: authLoading } = useAuth();
   const router = useRouter();
   const [delegates, setDelegates] = useState<Delegate[]>([]);
-  const [committees, setCommittees] = useState<Committee[]>([]); // New state for committees
+  const [committees, setCommittees] = useState<Committee[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -32,7 +32,6 @@ export default function AdminDashboardPage() {
     const fetchData = async () => {
         setLoading(true);
         try {
-            // Fetch both delegates and committees in parallel
             const [delegatesSnapshot, committeesSnapshot] = await Promise.all([
                 getDocs(collection(db, 'registrations')),
                 getDocs(collection(db, 'committees'))
@@ -46,7 +45,7 @@ export default function AdminDashboardPage() {
             const fetchedCommittees = committeesSnapshot.docs.map(doc => doc.data() as Committee);
 
             setDelegates(fetchedDelegates);
-            setCommittees(fetchedCommittees); // Set the fetched committees
+            setCommittees(fetchedCommittees);
 
         } catch (error: any) {
             console.error("Failed to fetch admin data:", error);
@@ -75,8 +74,8 @@ export default function AdminDashboardPage() {
             </p>
         </div>
       </div>
-      {/* Pass the dynamically fetched committees to the summary section */}
       <SummarySection delegates={delegates} committees={committees} loading={loading} />
+      <CommunicationHub delegates={delegates} />
     </div>
   );
 }

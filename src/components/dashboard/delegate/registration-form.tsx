@@ -236,7 +236,7 @@ export function DelegateRegistrationForm() {
                     </div>
                     <div className="grid gap-2">
                         <Label htmlFor="gender">Gender</Label>
-                        <Select onValueChange={(value) => handleSelectChange('gender', value)} value={formData.gender}>
+                        <Select onValueChange={(value) => handleSelectChange('gender', value)} value={formData.gender} required>
                             <SelectTrigger><SelectValue placeholder="Select Gender" /></SelectTrigger>
                             <SelectContent>
                             <SelectItem value="male">Male</SelectItem>
@@ -265,11 +265,11 @@ export function DelegateRegistrationForm() {
                 <div className="grid md:grid-cols-2 gap-4">
                     <div className="grid gap-2">
                     <Label htmlFor="affiliation">Institution/University Name</Label>
-                    <Input id="affiliation" value={formData.affiliation} onChange={handleChange} />
+                    <Input id="affiliation" value={formData.affiliation} onChange={handleChange} required={formData.delegate_type === 'nigerian' || formData.delegate_type === 'international'} />
                     </div>
                     <div className="grid gap-2">
                     <Label htmlFor="position">Position (e.g., Student, Analyst)</Label>
-                    <Input id="position" value={formData.position} onChange={handleChange} />
+                    <Input id="position" value={formData.position} onChange={handleChange} required={formData.delegate_type === 'nigerian' || formData.delegate_type === 'international'} />
                     </div>
                 </div>
                 
@@ -277,11 +277,11 @@ export function DelegateRegistrationForm() {
                     <div className="grid md:grid-cols-2 gap-4">
                         <div className="grid gap-2">
                             <Label htmlFor="department">Department</Label>
-                            <Input id="department" value={formData.department} onChange={handleChange} />
+                            <Input id="department" value={formData.department} onChange={handleChange} required />
                         </div>
                         <div className="grid gap-2">
                             <Label htmlFor="matric_num">Matriculation Number</Label>
-                            <Input id="matric_num" value={formData.matric_num} onChange={handleChange} />
+                            <Input id="matric_num" value={formData.matric_num} onChange={handleChange} required />
                         </div>
                     </div>
                 )}
@@ -363,7 +363,7 @@ export function DelegateRegistrationForm() {
               <CardContent className="grid gap-6">
                   <div className="grid gap-2">
                     <Label htmlFor="mun_experience">MUN Experience</Label>
-                    <Textarea id="mun_experience" placeholder="e.g., 3 conferences as delegate, 1 as chair..." value={formData.mun_experience} onChange={handleChange} />
+                    <Textarea id="mun_experience" placeholder="e.g., 3 conferences as delegate, 1 as chair..." value={formData.mun_experience} onChange={handleChange} required />
                 </div>
                 <div className="grid md:grid-cols-2 gap-4">
                     <div className="grid gap-2">
